@@ -1,5 +1,5 @@
 // src/admin/component/pages/AdminProducts.js
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const initialProducts = [
@@ -41,7 +41,59 @@ const AdminProducts = () => {
   const bgPage = "#FFFEF6";
   const navigate = useNavigate();
 
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+          console.warn("No admin token found");
+          setLoadingProducts(false);
+          return;
+        }
+
+        const response = await fetch(
+          "https://pa-man-api.vercel.app/api/products/",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            // Format products for display
+            const formattedProducts = result.data.map((product) => ({
+              id: product.id,
+              name: product.name,
+              category: product.category,
+              price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
+              stock: product.stock,
+              status: product.stock > 0 ? "available" : "unavailable",
+              photo_url: product.photo_url,
+              description: product.description,
+              discounted_price: product.discounted_price,
+            }));
+            setProducts(formattedProducts);
+          }
+        } else {
+          console.error("Failed to fetch products:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // dropdown filter
   const [isSortOpen, setIsSortOpen] = useState(false);

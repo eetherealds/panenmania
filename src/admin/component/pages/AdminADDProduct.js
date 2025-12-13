@@ -352,6 +352,7 @@ const AdminAddProduct = () => {
         formData.append("discounted_price", form.discountPrice);
       }
       formData.append("photo", photo);
+      console.log("category", form.category);
 
       // Get token
       const token = localStorage.getItem("adminToken");

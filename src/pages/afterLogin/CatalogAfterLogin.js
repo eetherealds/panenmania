@@ -107,10 +107,49 @@ function CatalogAfterLogin() {
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-  };
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          "https://pa-man-api.vercel.app/api/products/",
+          {
+            method: "GET",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            // Format products for display
+            const formattedProducts = result.data.map((product) => ({
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
+              image: product.photo_url || "https://via.placeholder.com/260x160",
+              category: product.category,
+              rawPrice: product.price,
+            }));
+            setProducts(formattedProducts);
+          }
+        } else {
+          console.error("Failed to fetch products:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Membaca query string dari URL
   useEffect(() => {
@@ -138,7 +177,7 @@ function CatalogAfterLogin() {
 
   // Filter produk
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((item) => {
+    return products.filter((item) => {
       const productCategory = item.category.toLowerCase();
       const matchCategory =
         selectedCategory === "all" || productCategory === selectedCategory;
@@ -152,7 +191,7 @@ function CatalogAfterLogin() {
 
       return matchCategory && matchText;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [products, selectedCategory, searchQuery]);
 
   return (
     <div className="font-poppins bg-[#F8FAF7] min-h-screen flex flex-col pt-14 sm:pt-16">
