@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Footer from "../../components/layout/Footer";
+import { ProductsContext } from "../../context/ProductsContext";
 
 // Banner gambar katalog
 import CatalogBanner from "../../assets/images/banners/petani katalog.svg";
@@ -104,73 +105,21 @@ const PRODUCTS = [
 
 function CatalogAfterLogin() {
   const location = useLocation();
+  const { products: allProducts, loading: loadingProducts } = useContext(ProductsContext);
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [pageSize] = useState(6);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
   };
 
-  // Fetch products from API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoadingProducts(true);
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          `https://pa-man-api.vercel.app/api/products/?page=${currentPage}&limit=${pageSize}`,
-          {
-            method: "GET",
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          let productsArray = [];
-
-          // Handle the response structure
-          if (result.data) {
-            if (result.data.results && Array.isArray(result.data.results)) {
-              // Products are in results array
-              productsArray = result.data.results;
-              setTotalPages(result.data.totalPages || 1);
-            } else if (Array.isArray(result.data)) {
-              // If data is already an array
-              productsArray = result.data;
-              setTotalPages(1);
-            }
-          }
-
-          // Format products for display
-          const formattedProducts = productsArray.map((product) => ({
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
-            image: product.photo_url || "https://via.placeholder.com/260x160",
-            category: product.category,
-            rawPrice: product.price,
-          }));
-          setProducts(formattedProducts);
-        } else {
-          console.error("Failed to fetch products:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-
-    fetchProducts();
-  }, [currentPage, pageSize]);
+  // Calculate pagination
+  const startIdx = (currentPage - 1) * pageSize;
+  const paginatedProducts = allProducts.slice(startIdx, startIdx + pageSize);
+  const totalPages = Math.ceil(allProducts.length / pageSize);
 
   // Membaca query string dari URL
   useEffect(() => {
@@ -196,9 +145,9 @@ function CatalogAfterLogin() {
     }
   }, [location.search]);
 
-  // Filter produk
+  // Filter produk dari paginated list
   const filteredProducts = useMemo(() => {
-    return products.filter((item) => {
+    return paginatedProducts.filter((item) => {
       const productCategory = item.category.toLowerCase();
       const matchCategory =
         selectedCategory === "all" || productCategory === selectedCategory;
@@ -212,7 +161,7 @@ function CatalogAfterLogin() {
 
       return matchCategory && matchText;
     });
-  }, [products, selectedCategory, searchQuery]);
+  }, [paginatedProducts, selectedCategory, searchQuery]);
 
   return (
     <div className="font-poppins bg-[#F8FAF7] min-h-screen flex flex-col pt-14 sm:pt-16">
@@ -326,7 +275,7 @@ function CatalogAfterLogin() {
                     </p>
 
                     <p className="text-[#344E41] font-bold text-[15px] sm:text-[16px]">
-                      {product.price}
+                      {product.priceFormatted}
                     </p>
                   </div>
                 </div>
