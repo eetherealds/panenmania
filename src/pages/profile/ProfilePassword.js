@@ -189,7 +189,9 @@ const ProfilePassword = () => {
             <p className="mt-3 font-semibold text-lg">
               {loading ? "Loading..." : profileData.full_name || "User"}
             </p>
-            <p className="text-sm text-gray-600">{profileData.email}</p>
+            {profileData.email && (
+              <p className="text-sm text-gray-600">{profileData.email}</p>
+            )}
           </div>
 
           {/* MENU */}
