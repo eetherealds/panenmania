@@ -42,6 +42,7 @@ const ProfileSideBar = ({ profileData, loading, onLogout, onUploadPic }) => {
       const formData = new FormData();
       formData.append('avatar', file);
 
+      console.log("Uploading avatar...");
       const response = await fetch(
         'https://pa-man-api.vercel.app/api/user/edit-avatar',
         {
@@ -53,11 +54,15 @@ const ProfileSideBar = ({ profileData, loading, onLogout, onUploadPic }) => {
         }
       );
 
+      console.log("Upload response:", response.status);
       if (response.ok) {
         const result = await response.json();
+        console.log("Avatar API response:", result);
         if (result.status === 'Success') {
-          // Fetch profile untuk update context dengan avatar baru
+          // Tunggu fetchProfile selesai sebelum alert
+          console.log("Fetching updated profile...");
           await fetchProfile();
+          console.log("Profile refetch complete");
           alert('Avatar berhasil diupdate!');
         }
       } else {
@@ -79,7 +84,7 @@ const ProfileSideBar = ({ profileData, loading, onLogout, onUploadPic }) => {
           <input type="file" className="hidden" onChange={handleAvatarUpload} />
           <div className="w-40 h-40 bg-[#F2F2F2] rounded-full flex items-center justify-center overflow-hidden">
             <img
-              src={profileData?.avatar_url || ProfilePhoto}
+              src={profileData?.avatar_url ? `${profileData.avatar_url}?t=${Date.now()}` : ProfilePhoto}
               alt="Profile"
               className="w-full h-full object-cover"
             />
