@@ -64,12 +64,16 @@ const ProfileMain = () => {
           if (result.status === "Success" && result.data) {
             setProfileData(result.data);
             // Initialize editData dengan data dari API
+            // Convert ISO date to YYYY-MM-DD format if needed
+            const birthdayValue = result.data.birthday 
+              ? result.data.birthday.split('T')[0] 
+              : "";
             setEditData({
               full_name: result.data.full_name,
               email: result.data.email,
               phone_number: result.data.phone_number,
               gender: result.data.gender,
-              birthday: result.data.birthday,
+              birthday: birthdayValue,
             });
             setGender(result.data.gender);
             setEditGender(result.data.gender);
@@ -138,6 +142,8 @@ const ProfileMain = () => {
         return;
       }
 
+      console.log("Sending update data:", updateData);
+
       const response = await fetch(
         "https://pa-man-api.vercel.app/api/user/edit-profile-data",
         {
@@ -155,20 +161,26 @@ const ProfileMain = () => {
         if (result.status === "Success") {
           // Update profileData hanya SETELAH berhasil
           setProfileData(result.data[0]);
+          // Convert ISO date to YYYY-MM-DD format if needed
+          const birthdayValue = result.data[0].birthday 
+            ? result.data[0].birthday.split('T')[0] 
+            : "";
           setEditData({
             full_name: result.data[0].full_name,
             email: result.data[0].email,
             phone_number: result.data[0].phone_number,
             gender: result.data[0].gender,
-            birthday: result.data[0].birthday,
+            birthday: birthdayValue,
           });
           setGender(result.data[0].gender);
           setEditGender(result.data[0].gender);
           setShowSuccessPopup(true);
         }
       } else {
-        const error = await response.json();
-        alert(error.message || "Gagal menyimpan perubahan");
+        const error = await response.json().catch(() => ({}));
+        console.error("API Error Response:", error);
+        const errorMsg = error.message || error.msg || `API Error: ${response.status}`;
+        alert(errorMsg);
       }
     } catch (error) {
       console.error("Error updating profile:", error);
