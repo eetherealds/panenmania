@@ -105,13 +105,27 @@ const ProfileMain = () => {
         return;
       }
 
+      // Validate required fields
+      if (!editData.full_name || !editData.email || !editData.phone_number || !editGender) {
+        alert("Semua field harus diisi");
+        setSaving(false);
+        return;
+      }
+
+      // Validate phone number format (10-20 digits only)
+      if (!/^\d{10,20}$/.test(editData.phone_number.replace(/\D/g, ''))) {
+        alert("Nomor telepon harus 10-20 digit angka");
+        setSaving(false);
+        return;
+      }
+
       // Prepare data untuk API
       const updateData = {
         full_name: editData.full_name,
         email: editData.email,
-        phone_number: editData.phone_number,
+        phone_number: editData.phone_number.replace(/\D/g, ''), // Remove non-digits
         gender: editGender,
-        birthday: editData.birthday,
+        birthday: editData.birthday ? editData.birthday : null,
       };
 
       const response = await fetch(
