@@ -47,12 +47,6 @@ const OrderHistory = () => {
     navigate("/", { replace: true });
   };
 
-  // Handler unggah foto profil (preview lokal)
-  const handleUploadPic = (e) => {
-    const file = e.target.files[0];
-    if (file) setProfilePic(URL.createObjectURL(file));
-  };
-
   // Fungsi penanda menu sidebar yang aktif
   const isActive = (path) => location.pathname === path;
 

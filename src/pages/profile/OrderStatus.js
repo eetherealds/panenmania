@@ -40,6 +40,19 @@ const OrderStatus = () => {
     }
   }, [profileData.avatar_url]);
 
+  // Handler membuka popup logout
+  const handleLogout = () => setShowLogoutPopup(true);
+
+  // Handler menutup popup logout
+  const closeLogoutPopup = () => setShowLogoutPopup(false);
+
+  // Handler konfirmasi logout dan kembali ke halaman utama
+  const confirmLogout = () => {
+    localStorage.removeItem("token");
+    setShowLogoutPopup(false);
+    navigate("/", { replace: true });
+  };
+
   // State untuk filter tab status pesanan (null = semua)
   const [activeTab, setActiveTab] = useState(null);
 
