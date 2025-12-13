@@ -125,8 +125,12 @@ const ProfileMain = () => {
         email: editData.email,
         phone_number: editData.phone_number.replace(/\D/g, ''), // Remove non-digits
         gender: editGender,
-        birthday: editData.birthday ? editData.birthday : null,
       };
+
+      // Only add birthday if it has a value
+      if (editData.birthday) {
+        updateData.birthday = editData.birthday; // Send as YYYY-MM-DD format
+      }
 
       const response = await fetch(
         "https://pa-man-api.vercel.app/api/user/edit-profile-data",
