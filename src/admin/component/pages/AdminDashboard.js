@@ -1,5 +1,5 @@
 // src/admin/component/pages/AdminDashboard.js
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminContext } from "../../../context/AdminContext";
 
@@ -9,6 +9,55 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { logout } = useContext(AdminContext);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [topProducts, setTopProducts] = useState([]);
+  const [topCategories, setTopCategories] = useState([]);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(true);
+
+  // Fetch top products and categories
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+          console.warn("No admin token found");
+          setLoadingAnalytics(false);
+          return;
+        }
+
+        const response = await fetch(
+          "https://pa-man-api.vercel.app/api/admin/top-products-categories",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data) {
+            // Set top 3 products
+            if (result.data.productsPayload?.top3Products) {
+              setTopProducts(result.data.productsPayload.top3Products);
+            }
+            // Set top 3 categories
+            if (result.data.categoriesPayload?.top3Categories) {
+              setTopCategories(result.data.categoriesPayload.top3Categories);
+            }
+          }
+        } else {
+          console.error("Failed to fetch analytics:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+      } finally {
+        setLoadingAnalytics(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
 
   return (
     <div
@@ -335,34 +384,44 @@ const AdminDashboard = () => {
               </div>
 
               <div className="space-y-4 text-xs text-[#3A5B40]">
-                {[
-                  { name: "Beras Rojo Lele 5kg", value: "100 Produk", width: "90%" },
-                  { name: "Beras Pandan Wangi 5kg", value: "60 Produk", width: "70%" },
-                  { name: "Bayam Hijau Segar 250g", value: "30 Produk", width: "40%" },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    {/* teks kiri */}
-                    <div className="w-1/3">{item.name}</div>
+                {loadingAnalytics ? (
+                  <p className="text-gray-500">Loading...</p>
+                ) : topProducts.length > 0 ? (
+                  topProducts.map((product, idx) => {
+                    // Calculate percentage based on first product (max)
+                    const maxSold = topProducts[0]?.total_sold || 1;
+                    const percentage = (product.total_sold / maxSold) * 100;
 
-                    {/* bar tengah */}
-                    <div className="flex-1">
-                      <div className="w-full h-2 rounded-full bg-[#E5E7EB]">
-                        <div
-                          className="h-2 rounded-full"
-                          style={{
-                            width: item.width,
-                            background:
-                              "linear-gradient(90deg,#B8D68F 0%,#5A9F68 100%)",
-                            boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-                          }}
-                        />
+                    return (
+                      <div key={idx} className="flex items-center gap-3">
+                        {/* teks kiri */}
+                        <div className="w-1/3">{product.name}</div>
+
+                        {/* bar tengah */}
+                        <div className="flex-1">
+                          <div className="w-full h-2 rounded-full bg-[#E5E7EB]">
+                            <div
+                              className="h-2 rounded-full"
+                              style={{
+                                width: `${percentage}%`,
+                                background:
+                                  "linear-gradient(90deg,#B8D68F 0%,#5A9F68 100%)",
+                                boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* teks kanan */}
+                        <div className="w-[80px] text-right">
+                          {product.total_sold} Produk
+                        </div>
                       </div>
-                    </div>
-
-                    {/* teks kanan */}
-                    <div className="w-[80px] text-right">{item.value}</div>
-                  </div>
-                ))}
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-500">Tidak ada data produk</p>
+                )}
               </div>
             </div>
 
@@ -379,34 +438,44 @@ const AdminDashboard = () => {
               </div>
 
               <div className="space-y-4 text-xs text-[#3A5B40]">
-                {[
-                  { name: "Buah", value: "100 Produk", width: "90%" },
-                  { name: "Beras", value: "60 Produk", width: "70%" },
-                  { name: "Sayur", value: "30 Produk", width: "40%" },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    {/* teks kiri */}
-                    <div className="w-1/3">{item.name}</div>
+                {loadingAnalytics ? (
+                  <p className="text-gray-500">Loading...</p>
+                ) : topCategories.length > 0 ? (
+                  topCategories.map((category, idx) => {
+                    // Calculate percentage based on first category (max)
+                    const maxCount = topCategories[0]?.count || 1;
+                    const percentage = (category.count / maxCount) * 100;
 
-                    {/* bar tengah */}
-                    <div className="flex-1">
-                      <div className="w-full h-2 rounded-full bg-[#E5E7EB]">
-                        <div
-                          className="h-2 rounded-full"
-                          style={{
-                            width: item.width,
-                            background:
-                              "linear-gradient(90deg,#B8D68F 0%,#5A9F68 100%)",
-                            boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-                          }}
-                        />
+                    return (
+                      <div key={idx} className="flex items-center gap-3">
+                        {/* teks kiri */}
+                        <div className="w-1/3">{category.name}</div>
+
+                        {/* bar tengah */}
+                        <div className="flex-1">
+                          <div className="w-full h-2 rounded-full bg-[#E5E7EB]">
+                            <div
+                              className="h-2 rounded-full"
+                              style={{
+                                width: `${percentage}%`,
+                                background:
+                                  "linear-gradient(90deg,#B8D68F 0%,#5A9F68 100%)",
+                                boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* teks kanan */}
+                        <div className="w-[80px] text-right">
+                          {category.count} Pesanan
+                        </div>
                       </div>
-                    </div>
-
-                    {/* teks kanan */}
-                    <div className="w-[80px] text-right">{item.value}</div>
-                  </div>
-                ))}
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-500">Tidak ada data kategori</p>
+                )}
               </div>
             </div>
           </section>
