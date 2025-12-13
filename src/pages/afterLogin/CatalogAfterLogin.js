@@ -109,6 +109,9 @@ function CatalogAfterLogin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize] = useState(6);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -118,9 +121,10 @@ function CatalogAfterLogin() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setLoadingProducts(true);
         const token = localStorage.getItem("token");
         const response = await fetch(
-          "https://pa-man-api.vercel.app/api/products/",
+          `https://pa-man-api.vercel.app/api/products/?page=${currentPage}&limit=${pageSize}`,
           {
             method: "GET",
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -129,19 +133,32 @@ function CatalogAfterLogin() {
 
         if (response.ok) {
           const result = await response.json();
-          if (result.data && Array.isArray(result.data)) {
-            // Format products for display
-            const formattedProducts = result.data.map((product) => ({
-              id: product.id,
-              name: product.name,
-              description: product.description,
-              price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
-              image: product.photo_url || "https://via.placeholder.com/260x160",
-              category: product.category,
-              rawPrice: product.price,
-            }));
-            setProducts(formattedProducts);
+          let productsArray = [];
+
+          // Handle the response structure
+          if (result.data) {
+            if (result.data.results && Array.isArray(result.data.results)) {
+              // Products are in results array
+              productsArray = result.data.results;
+              setTotalPages(result.data.totalPages || 1);
+            } else if (Array.isArray(result.data)) {
+              // If data is already an array
+              productsArray = result.data;
+              setTotalPages(1);
+            }
           }
+
+          // Format products for display
+          const formattedProducts = productsArray.map((product) => ({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
+            image: product.photo_url || "https://via.placeholder.com/260x160",
+            category: product.category,
+            rawPrice: product.price,
+          }));
+          setProducts(formattedProducts);
         } else {
           console.error("Failed to fetch products:", response.status);
         }
@@ -153,7 +170,7 @@ function CatalogAfterLogin() {
     };
 
     fetchProducts();
-  }, []);
+  }, [currentPage, pageSize]);
 
   // Membaca query string dari URL
   useEffect(() => {
@@ -322,6 +339,41 @@ function CatalogAfterLogin() {
               </div>
             )}
           </div>
+
+          {/* PAGINATION */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-12">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-[#3A5B40] text-[#3A5B40] hover:bg-[#3A5B40] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                ← Sebelumnya
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 rounded-lg border transition ${
+                    currentPage === page
+                      ? "bg-[#3A5B40] text-white border-[#3A5B40]"
+                      : "border-[#3A5B40] text-[#3A5B40] hover:bg-[#3A5B40]/10"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg border border-[#3A5B40] text-[#3A5B40] hover:bg-[#3A5B40] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Berikutnya →
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
