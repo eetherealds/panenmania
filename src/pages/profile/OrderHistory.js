@@ -3,7 +3,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
-import ProfileSideBar from "./ProfileSideBar";
+import ProfileSideBar from "../../components/layout/ProfileSideBar";
 import Popup from "../../components/common/Popup";
 
 const OrderHistory = () => {

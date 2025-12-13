@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
-import ProfileSideBar from "./ProfileSideBar";
+import ProfileSideBar from "../../components/layout/ProfileSideBar";
 
 // ICONS & IMAGES
 import ProfilePhoto from "../../assets/images/icons/pp.svg";

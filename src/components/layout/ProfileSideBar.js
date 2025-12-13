@@ -2,11 +2,11 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
 // ICONS & IMAGES
-import EditIcon from "../../../assets/images/icons/edit.svg";
-import ProfileIcon from "../../../assets/images/icons/profile.svg";
-import CheckIcon from "../../../assets/images/icons/ceklis.svg";
-import OutIcon from "../../../assets/images/icons/out.svg";
-import ProfilePhoto from "../../../assets/images/icons/pp.svg";
+import EditIcon from "../../assets/images/icons/edit.svg";
+import ProfileIcon from "../../assets/images/icons/profile.svg";
+import CheckIcon from "../../assets/images/icons/ceklis.svg";
+import OutIcon from "../../assets/images/icons/out.svg";
+import ProfilePhoto from "../../assets/images/icons/pp.svg";
 
 const ProfileSideBar = ({ profileData, loading, onLogout, onUploadPic }) => {
   const location = useLocation();
