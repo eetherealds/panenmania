@@ -277,35 +277,116 @@ const AdminAddProduct = () => {
     };
   });
 
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhoto(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    console.log(isEditMode ? "Update produk:" : "Produk baru:", {
-      id: productId,
-      ...form,
-    });
+    try {
+      // Validation
+      if (!form.name || form.name.length < 3 || form.name.length > 255) {
+        setError("Nama produk harus 3-255 karakter");
+        setLoading(false);
+        return;
+      }
 
-    // KIRIM DATA KEMBALI KE HALAMAN PRODUCTS VIA navigate state
-    // AdminProducts bisa membaca location.state.mode & data untuk update daftar.
-    if (isEditMode && productId != null) {
-      navigate("/admin/products", {
-        state: {
-          mode: "edit",
-          productId,
-          updatedData: form,
+      if (!form.price) {
+        setError("Harga harus diisi");
+        setLoading(false);
+        return;
+      }
+
+      if (form.stock === "") {
+        setError("Stok harus diisi");
+        setLoading(false);
+        return;
+      }
+
+      if (!form.description || form.description.length > 4000) {
+        setError("Deskripsi harus diisi dan maksimal 4000 karakter");
+        setLoading(false);
+        return;
+      }
+
+      if (!form.category) {
+        setError("Kategori harus dipilih");
+        setLoading(false);
+        return;
+      }
+
+      if (!photo) {
+        setError("Foto produk harus diupload");
+        setLoading(false);
+        return;
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("stock", form.stock);
+      formData.append("price", form.price);
+      formData.append("description", form.description);
+      formData.append("category", form.category);
+      if (form.discountPrice) {
+        formData.append("discounted_price", form.discountPrice);
+      }
+      formData.append("photo", photo);
+
+      // Get token
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        setError("Token tidak ditemukan");
+        setLoading(false);
+        return;
+      }
+
+      // API Call
+      const response = await fetch("https://pa-man-api.vercel.app/api/products/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
+        body: formData,
       });
-    } else {
-      navigate("/admin/products", {
-        state: {
-          mode: "add",
-          newData: form,
-        },
-      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert("Produk berhasil ditambahkan!");
+        navigate("/admin/products");
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(
+          errorData.message ||
+            errorData.msg ||
+            `Gagal menambahkan produk (${response.status})`
+        );
+      }
+    } catch (err) {
+      console.error("Error adding product:", err);
+      setError("Terjadi kesalahan saat menambahkan produk");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -431,6 +512,13 @@ const AdminAddProduct = () => {
             "
             style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.10)" }}
           >
+            {/* ERROR MESSAGE */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 text-sm rounded">
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-10">
               {/* ATAS: Informasi Umum + Upload */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -504,63 +592,95 @@ const AdminAddProduct = () => {
                   </h2>
 
                   <p className="text-xs text-[#3A5B40] mb-3">
-                    Unggah 3 gambar untuk ditampilkan dalam katalog.
+                    Unggah gambar untuk ditampilkan dalam katalog.
                   </p>
 
                   {/* Dropzone – background putih */}
-                  <div
-                    className="
-                      w-full
-                      rounded-md
-                      border border-dashed border-[#3A5B40]
-                      bg-white
-                      flex flex-col items-center justify-center
-                      text-center
-                      px-4
-                      py-10 sm:py-14
-                    "
-                  >
-                    <div className="mb-4">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        className="w-8 h-8 mx-auto"
-                        fill="none"
-                        stroke="#3A5B40"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                  {photoPreview ? (
+                    <div className="w-full rounded-md border border-[#3A5B40] bg-white p-4">
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhoto(null);
+                          setPhotoPreview(null);
+                        }}
+                        className="mt-3 h-9 px-4 rounded-md text-sm bg-red-500 text-white hover:bg-red-600 transition"
                       >
-                        <path d="M4 16.5A4.5 4.5 0 018.5 12H10" />
-                        <path d="M15.5 7A3.5 3.5 0 0012 3.5 3.5 3.5 0 008.5 7" />
-                        <path d="M12 12v7" />
-                        <path d="M9.5 14.5L12 12l2.5 2.5" />
-                        <path d="M4 16.5A4.5 4.5 0 008.5 21h7a4.5 4.5 0 004.5-4.5" />
-                      </svg>
+                        Hapus Foto
+                      </button>
                     </div>
-
-                    <p className="text-[11px] text-[#3A5B40] mb-3 max-w-xs">
-                      Select a file or drag and drop here
-                      <br />
-                      JPG or PNG, file size no more than 10MB
-                    </p>
-
-                    <button
-                      type="button"
+                  ) : (
+                    <div
                       className="
-                        mt-1
-                        h-9 px-5
-                        rounded-[999px]
-                        text-xs
-                        bg-[#3A5B40]
-                        text-white
-                        hover:bg-[#324c36]
-                        transition
+                        w-full
+                        rounded-md
+                        border border-dashed border-[#3A5B40]
+                        bg-white
+                        flex flex-col items-center justify-center
+                        text-center
+                        px-4
+                        py-10 sm:py-14
                       "
                     >
-                      Browse File
-                    </button>
-                  </div>
+                      <div className="mb-4">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          className="w-8 h-8 mx-auto"
+                          fill="none"
+                          stroke="#3A5B40"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M4 16.5A4.5 4.5 0 018.5 12H10" />
+                          <path d="M15.5 7A3.5 3.5 0 0012 3.5 3.5 3.5 0 008.5 7" />
+                          <path d="M12 12v7" />
+                          <path d="M9.5 14.5L12 12l2.5 2.5" />
+                          <path d="M4 16.5A4.5 4.5 0 008.5 21h7a4.5 4.5 0 004.5-4.5" />
+                        </svg>
+                      </div>
+
+                      <p className="text-[11px] text-[#3A5B40] mb-3 max-w-xs">
+                        Select a file or drag and drop here
+                        <br />
+                        JPG or PNG, file size no more than 10MB
+                      </p>
+
+                      <label className="mt-1">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png"
+                          onChange={handlePhotoChange}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.parentElement.querySelector("input").click();
+                          }}
+                          className="
+                            h-9 px-5
+                            rounded-[999px]
+                            text-xs
+                            bg-[#3A5B40]
+                            text-white
+                            hover:bg-[#324c36]
+                            transition
+                            cursor-pointer
+                          "
+                        >
+                          Browse File
+                        </button>
+                      </label>
+                    </div>
+                  )}
                 </section>
               </div>
 
@@ -657,6 +777,7 @@ const AdminAddProduct = () => {
               <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
                 <button
                   type="button"
+                  disabled={loading}
                   className="
                     h-[44px] px-6
                     rounded-md
@@ -665,6 +786,7 @@ const AdminAddProduct = () => {
                     text-white
                     hover:bg-[#7a2922]
                     transition
+                    disabled:bg-gray-400 disabled:cursor-not-allowed
                   "
                   onClick={() => navigate("/admin/products")}
                 >
@@ -672,6 +794,7 @@ const AdminAddProduct = () => {
                 </button>
                 <button
                   type="submit"
+                  disabled={loading}
                   className="
                     h-[44px] px-6
                     rounded-md
@@ -680,9 +803,10 @@ const AdminAddProduct = () => {
                     text-white
                     hover:bg-[#324c36]
                     transition
+                    disabled:bg-gray-400 disabled:cursor-not-allowed
                   "
                 >
-                  Simpan
+                  {loading ? "Loading..." : "Simpan"}
                 </button>
               </div>
             </form>
