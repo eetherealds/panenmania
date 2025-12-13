@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
+import ProfileSideBar from "./ProfileSideBar";
 
 // ICONS & IMAGES (sama seperti ProfileMain)
 import EditIcon from "../../assets/images/icons/edit.svg";

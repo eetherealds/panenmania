@@ -5,6 +5,7 @@ import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 import AddressModal from "./AddressModal";
+import ProfileSideBar from "./ProfileSideBar";
 
 // ICONS & IMAGES (samakan dengan ProfileMain)
 import EditIcon from "../../assets/images/icons/edit.svg";
