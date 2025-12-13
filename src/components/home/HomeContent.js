@@ -1,5 +1,5 @@
 // src/components/home/HomeContent.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // Banner
@@ -37,6 +37,39 @@ const HomeContent = ({ isLoggedIn }) => {
   const catalogBase = isLoggedIn ? "/catalog/login" : "/catalog";
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = isLoggedIn ? localStorage.getItem("token") : null;
+        const response = await fetch(
+          "https://pa-man-api.vercel.app/api/products/",
+          {
+            method: "GET",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            setProducts(result.data.slice(0, 8)); // Get first 8 products
+          }
+        } else {
+          console.error("Failed to fetch products:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, [isLoggedIn]);
 
   // Data statistik
   const statistikItems = [
@@ -250,45 +283,53 @@ const HomeContent = ({ isLoggedIn }) => {
 
           {/* Grid produk */}
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-10 gap-x-6 md:gap-y-12 md:gap-x-8">
-            {Array.from({ length: 8 }).map((_, i) => {
-              const productId = i + 1;
-              return (
-                <Link
-                  key={i}
-                  to={
-                    isLoggedIn
-                      ? `/product/${productId}`
-                      : `/product-before/${productId}`
-                  }
-                >
-                  <div className="bg-white rounded-3xl shadow-[0_4px_10px_rgba(0,0,0,0.08)] border border-[#E0E6D8] hover:shadow-xl transition-all duration-200 cursor-pointer w-full max-w-[310px] mx-auto">
-                    {/* Gambar produk */}
-                    <div className="w-full bg-[#F4F8F1] rounded-t-3xl p-6 h-[180px] sm:h-[200px] flex items-center justify-center">
-                      <img
-                        src={BawangMerah}
-                        alt="product bawang merah"
-                        className="h-full object-contain"
-                      />
+            {loadingProducts ? (
+              <p className="text-gray-500 col-span-full text-center">Loading...</p>
+            ) : products.length > 0 ? (
+              products.map((product) => {
+                const productId = product.id;
+                return (
+                  <Link
+                    key={productId}
+                    to={
+                      isLoggedIn
+                        ? `/product/${productId}`
+                        : `/product-before/${productId}`
+                    }
+                  >
+                    <div className="bg-white rounded-3xl shadow-[0_4px_10px_rgba(0,0,0,0.08)] border border-[#E0E6D8] hover:shadow-xl transition-all duration-200 cursor-pointer w-full max-w-[310px] mx-auto">
+                      {/* Gambar produk */}
+                      <div className="w-full bg-[#F4F8F1] rounded-t-3xl p-6 h-[180px] sm:h-[200px] flex items-center justify-center">
+                        <img
+                          src={product.photo_url || BawangMerah}
+                          alt={product.name}
+                          className="h-full object-contain"
+                        />
+                      </div>
+
+                      {/* Detail produk */}
+                      <div className="p-5 sm:p-6">
+                        <h3 className="text-[#344E41] font-bold text-[15px] sm:text-[17px] mb-2">
+                          {product.name}
+                        </h3>
+
+                        <p className="text-[#3A5A40] text-[12px] sm:text-[13px] mb-4 leading-relaxed">
+                          {product.description}
+                        </p>
+
+                        <p className="text-[#344E41] font-bold text-[15px] sm:text-[16px]">
+                          Rp{product.price?.toLocaleString("id-ID") || 0}
+                        </p>
+                      </div>
                     </div>
-
-                    {/* Detail produk */}
-                    <div className="p-5 sm:p-6">
-                      <h3 className="text-[#344E41] font-bold text-[15px] sm:text-[17px] mb-2">
-                        Beras Lele 5kg
-                      </h3>
-
-                      <p className="text-[#3A5A40] text-[12px] sm:text-[13px] mb-4 leading-relaxed">
-                        LAHAP LELE BERAS PUNEL & PUTIH ALAMI PREMIUM 5kg
-                      </p>
-
-                      <p className="text-[#344E41] font-bold text-[15px] sm:text-[16px]">
-                        Rp70.000.00
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+                  </Link>
+                );
+              })
+            ) : (
+              <p className="text-gray-500 col-span-full text-center">
+                Tidak ada produk tersedia
+              </p>
+            )}
           </div>
         </div>
       </section>
