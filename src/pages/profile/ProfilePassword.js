@@ -27,12 +27,6 @@ const ProfilePassword = () => {
 
   // State untuk menyimpan sementara foto profil yang diunggah
   const [profilePic, setProfilePic] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState({
-    full_name: "",
-    email: "",
-    avatar_url: "",
-  });
 
   // Handler unggah foto profil (hanya untuk keperluan preview)
   const handleUploadPic = (e) => {

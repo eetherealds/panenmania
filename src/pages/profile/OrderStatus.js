@@ -26,12 +26,6 @@ const OrderStatus = () => {
 
   // State untuk foto profil sementara (preview)
   const [profilePic, setProfilePic] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState({
-    full_name: "",
-    email: "",
-    avatar_url: "",
-  });
 
   // Handler unggah foto profil (hanya untuk preview lokal)
   const handleUploadPic = (e) => {
