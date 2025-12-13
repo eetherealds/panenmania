@@ -105,31 +105,37 @@ const ProfileMain = () => {
         return;
       }
 
-      // Validate required fields
-      if (!editData.full_name || !editData.email || !editData.phone_number || !editGender) {
-        alert("Semua field harus diisi");
-        setSaving(false);
-        return;
+      // Prepare data untuk API - hanya field yang diubah/ada nilai
+      const updateData = {};
+
+      // Add fields yang memiliki nilai
+      if (editData.full_name) {
+        updateData.full_name = editData.full_name;
       }
-
-      // Validate phone number format (10-20 digits only)
-      if (!/^\d{10,20}$/.test(editData.phone_number.replace(/\D/g, ''))) {
-        alert("Nomor telepon harus 10-20 digit angka");
-        setSaving(false);
-        return;
+      if (editData.email) {
+        updateData.email = editData.email;
       }
-
-      // Prepare data untuk API
-      const updateData = {
-        full_name: editData.full_name,
-        email: editData.email,
-        phone_number: editData.phone_number.replace(/\D/g, ''), // Remove non-digits
-        gender: editGender,
-      };
-
-      // Only add birthday if it has a value
+      if (editData.phone_number) {
+        // Validate phone number format (10-20 digits only)
+        if (!/^\d{10,20}$/.test(editData.phone_number.replace(/\D/g, ''))) {
+          alert("Nomor telepon harus 10-20 digit angka");
+          setSaving(false);
+          return;
+        }
+        updateData.phone_number = editData.phone_number.replace(/\D/g, ''); // Remove non-digits
+      }
+      if (editGender) {
+        updateData.gender = editGender;
+      }
       if (editData.birthday) {
         updateData.birthday = editData.birthday; // Send as YYYY-MM-DD format
+      }
+
+      // Check if ada field yang akan diupdate
+      if (Object.keys(updateData).length === 0) {
+        alert("Tidak ada perubahan data untuk disimpan");
+        setSaving(false);
+        return;
       }
 
       const response = await fetch(
