@@ -54,6 +54,8 @@ const AdminProducts = () => {
   // modal delete
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const handleSortSelect = (value) => {
     if (value === "Semua Kategori") {
@@ -108,13 +110,59 @@ const AdminProducts = () => {
   const closeDeleteModal = () => {
     setIsDeleteOpen(false);
     setDeleteTarget(null);
+    setDeleteError("");
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
-    setProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-    setSelectedProducts((prev) => prev.filter((id) => id !== deleteTarget.id));
-    closeDeleteModal();
+    
+    setDeleteLoading(true);
+    setDeleteError("");
+
+    try {
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        setDeleteError("Token tidak ditemukan");
+        setDeleteLoading(false);
+        return;
+      }
+
+      const response = await fetch(
+        `https://pa-man-api.vercel.app/api/products/${deleteTarget.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Remove from products list
+        setProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+        setSelectedProducts((prev) => prev.filter((id) => id !== deleteTarget.id));
+        closeDeleteModal();
+        alert("Produk berhasil dihapus!");
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 400) {
+          setDeleteError(
+            "Produk tidak dapat dihapus karena sudah dipesan oleh pengguna"
+          );
+        } else {
+          setDeleteError(
+            errorData.message ||
+              errorData.msg ||
+              `Gagal menghapus produk (${response.status})`
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      setDeleteError("Terjadi kesalahan saat menghapus produk");
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   return (
@@ -520,9 +568,17 @@ const AdminProducts = () => {
               Apakah Anda yakin?
             </p>
 
+            {/* ERROR MESSAGE */}
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 text-sm rounded">
+                {deleteError}
+              </div>
+            )}
+
             <div className="flex justify-center gap-4">
               <button
                 type="button"
+                disabled={deleteLoading}
                 className="
                   h-[40px] px-6
                   rounded-[10px]
@@ -531,6 +587,7 @@ const AdminProducts = () => {
                   text-white
                   hover:bg-[#7a2922]
                   transition
+                  disabled:bg-gray-400 disabled:cursor-not-allowed
                 "
                 onClick={closeDeleteModal}
               >
@@ -538,6 +595,7 @@ const AdminProducts = () => {
               </button>
               <button
                 type="button"
+                disabled={deleteLoading}
                 className="
                   h-[40px] px-6
                   rounded-[10px]
@@ -546,10 +604,11 @@ const AdminProducts = () => {
                   text-white
                   hover:bg-[#324c36]
                   transition
+                  disabled:bg-gray-400 disabled:cursor-not-allowed
                 "
                 onClick={confirmDelete}
               >
-                Ya, Hapus!
+                {deleteLoading ? "Menghapus..." : "Ya, Hapus!"}
               </button>
             </div>
           </div>
