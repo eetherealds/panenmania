@@ -26,6 +26,53 @@ const ProfileAddress = () => {
   const [profilePic, setProfilePic] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+
+  // fetch alamat dari API
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/signin");
+          return;
+        }
+
+        setLoadingAddresses(true);
+        const response = await fetch(
+          "https://pa-man-api.vercel.app/api/user/address",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            const formattedAddresses = result.data.map((addr) => ({
+              id: addr.id,
+              name: addr.recipient_name,
+              detail: `${addr.street}, ${addr.kecamatan}, ${addr.city}, ${addr.province} ${addr.postal_code}`,
+              isPrimary: addr.is_default || false,
+            }));
+            setAddresses(formattedAddresses);
+          }
+        } else {
+          console.error("Failed to fetch addresses:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      } finally {
+        setLoadingAddresses(false);
+      }
+    };
+
+    fetchAddresses();
+  }, [navigate]);
 
   // upload foto profil
   const handleUploadPic = (e) => {
@@ -43,9 +90,49 @@ const ProfileAddress = () => {
     setShowModal(true);
   };
 
-  // hapus alamat dari list
+  // hapus alamat dari list + API call
+  const deleteAddress = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      const response = await fetch(
+        `https://pa-man-api.vercel.app/api/user/address/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Address deleted successfully:", result);
+        // Hapus alamat dari list lokal
+        setAddresses((prev) => prev.filter((a) => a.id !== id));
+        setShowSuccess(true);
+      } else {
+        const error = await response.json().catch(() => ({}));
+        console.error("Delete address error:", error);
+        const errorMsg = error.message || error.msg || `API Error: ${response.status}`;
+        alert(errorMsg);
+      }
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      alert("Terjadi kesalahan saat menghapus alamat");
+    }
+  };
+
   const removeAddress = (id) => {
-    setAddresses((prev) => prev.filter((a) => a.id !== id));
+    // Tampilkan konfirmasi sebelum delete
+    if (window.confirm("Apakah Anda yakin ingin menghapus alamat ini?")) {
+      deleteAddress(id);
+    }
   };
 
   // set alamat utama
@@ -87,6 +174,8 @@ const ProfileAddress = () => {
         }
       );
 
+      console.log("Address request data:", addressData);
+
       if (response.ok) {
         const result = await response.json();
         if (result.data) {
@@ -102,8 +191,10 @@ const ProfileAddress = () => {
           setShowSuccess(true);
         }
       } else {
-        const error = await response.json();
-        alert(error.message || "Gagal menambah alamat");
+        const error = await response.json().catch(() => ({}));
+        console.error("Address API error:", error);
+        const errorMsg = error.message || error.msg || `API Error: ${response.status}`;
+        alert(errorMsg);
       }
     } catch (error) {
       console.error("Error saving address:", error);
@@ -270,60 +361,66 @@ const ProfileAddress = () => {
 
             {/* List alamat */}
             <div className="space-y-4">
-              {addresses.map((addr) => (
-                <div
-                  key={addr.id}
-                  className="bg-white rounded-[10px] px-5 py-4 flex justify-between items-start shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
-                >
-                  {/* Left: nama + detail */}
-                  <div className="flex-1 pr-6">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="font-semibold text-sm">
-                        {addr.name}
-                      </span>
-                      {addr.isPrimary && (
-                        <span className="text-xs text-[#344E41]">
-                          Alamat Utama
+              {loadingAddresses ? (
+                <p className="text-center text-gray-600 py-4">Memuat alamat...</p>
+              ) : addresses.length === 0 ? (
+                <p className="text-center text-gray-600 py-4">Tidak ada alamat. Silakan tambahkan alamat baru.</p>
+              ) : (
+                addresses.map((addr) => (
+                  <div
+                    key={addr.id}
+                    className="bg-white rounded-[10px] px-5 py-4 flex justify-between items-start shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
+                  >
+                    {/* Left: nama + detail */}
+                    <div className="flex-1 pr-6">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="font-semibold text-sm">
+                          {addr.name}
                         </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-[#222] leading-relaxed">
-                      {addr.detail}
-                    </p>
-                  </div>
-
-                  {/* Right: icons (edit & hapus) */}
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openEdit(addr)}
-                        className="p-2 rounded-full hover:bg-[#F2F2F2] transition"
-                        aria-label="Ubah alamat"
-                      >
-                        <img
-                          src={PencilIcon}
-                          alt="Edit"
-                          className="w-4 h-4"
-                        />
-                      </button>
-                      <button
-                        onClick={() => removeAddress(addr.id)}
-                        className="p-2 rounded-full hover:bg-[#F2F2F2] transition"
-                        aria-label="Hapus alamat"
-                      >
-                        <img
-                          src={TrashIcon}
-                          alt="Hapus"
-                          className="w-4 h-4"
-                        />
-                      </button>
+                        {addr.isPrimary && (
+                          <span className="text-xs text-[#344E41]">
+                            Alamat Utama
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-[#222] leading-relaxed">
+                        {addr.detail}
+                      </p>
                     </div>
 
-                    {/* ❌ Atur sebagai utama dihapus sesuai request */}
-                    {/* Jika tetap mau bisa panggil setPrimary(addr.id) di sini */}
+                    {/* Right: icons (edit & hapus) */}
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openEdit(addr)}
+                          className="p-2 rounded-full hover:bg-[#F2F2F2] transition"
+                          aria-label="Ubah alamat"
+                        >
+                          <img
+                            src={PencilIcon}
+                            alt="Edit"
+                            className="w-4 h-4"
+                          />
+                        </button>
+                        <button
+                          onClick={() => removeAddress(addr.id)}
+                          className="p-2 rounded-full hover:bg-[#F2F2F2] transition"
+                          aria-label="Hapus alamat"
+                        >
+                          <img
+                            src={TrashIcon}
+                            alt="Hapus"
+                            className="w-4 h-4"
+                          />
+                        </button>
+                      </div>
+
+                      {/* ❌ Atur sebagai utama dihapus sesuai request */}
+                      {/* Jika tetap mau bisa panggil setPrimary(addr.id) di sini */}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
