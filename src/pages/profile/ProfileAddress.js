@@ -65,6 +65,10 @@ const ProfileAddress = () => {
           }
         } else {
           console.error("Failed to fetch addresses:", response.status);
+          if (response.status === 404) {
+            console.warn("Address endpoint not available, continuing with empty addresses");
+            setAddresses([]);
+          }
         }
       } catch (error) {
         console.error("Error fetching addresses:", error);
@@ -195,8 +199,12 @@ const ProfileAddress = () => {
       } else {
         const error = await response.json().catch(() => ({}));
         console.error("Address API error:", error);
-        const errorMsg = error.message || error.msg || `API Error: ${response.status}`;
-        alert(errorMsg);
+        if (response.status === 404) {
+          alert("Endpoint alamat tidak tersedia di backend. Hubungi administrator.");
+        } else {
+          const errorMsg = error.message || error.msg || `API Error: ${response.status}`;
+          alert(errorMsg);
+        }
       }
     } catch (error) {
       console.error("Error saving address:", error);

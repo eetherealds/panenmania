@@ -1,17 +1,61 @@
 // src/pages/admin/AdminLogin.js
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AdminContext } from "../../../context/AdminContext";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { setAdminData } = useContext(AdminContext);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate("/admin/2fa");
+    setError("");
+    setLoading(true);
+
+    try {
+      if (!email || !password) {
+        setError("Email dan kata sandi harus diisi");
+        setLoading(false);
+        return;
+      }
+
+      // Call login API
+      const response = await fetch("https://pa-man-api.vercel.app/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.data?.token) {
+        // Save token and admin data
+        localStorage.setItem("adminToken", result.data.token);
+        if (result.data.admin) {
+          localStorage.setItem("adminData", JSON.stringify(result.data.admin));
+          setAdminData(result.data.admin);
+        }
+        navigate("/admin/2fa");
+      } else {
+        setError(result.message || "Login gagal, silakan coba lagi");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("Terjadi kesalahan saat login");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,6 +95,13 @@ const AdminLogin = () => {
         <h1 className="text-[22px] font-bold text-[#3A5B40] mb-10 text-center">
           Login Admin
         </h1>
+
+        {/* ERROR MESSAGE */}
+        {error && (
+          <div className="w-full mb-4 p-3 bg-red-100 border border-red-400 text-red-700 text-sm rounded">
+            {error}
+          </div>
+        )}
 
         {/* FORM */}
         <form className="w-full space-y-6" onSubmit={handleSubmit}>
@@ -145,6 +196,7 @@ const AdminLogin = () => {
           {/* Button */}
           <button
             type="submit"
+            disabled={loading}
             className="
               mt-6
               w-full h-[52px]
@@ -155,9 +207,10 @@ const AdminLogin = () => {
               flex items-center justify-center
               hover:bg-[#324c36]
               transition
+              disabled:bg-gray-400 disabled:cursor-not-allowed
             "
           >
-            Masuk
+            {loading ? "Loading..." : "Masuk"}
           </button>
         </form>
       </div>

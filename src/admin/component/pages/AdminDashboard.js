@@ -1,11 +1,14 @@
 // src/admin/component/pages/AdminDashboard.js
-import React from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AdminContext } from "../../../context/AdminContext";
 
 const AdminDashboard = () => {
   const bgPage = "#FFFEF6";
   const primary = "#3A5B40";
   const navigate = useNavigate();
+  const { logout } = useContext(AdminContext);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   return (
     <div
@@ -117,9 +120,47 @@ const AdminDashboard = () => {
             </button>
 
             {/* Profile placeholder (nanti dari backend) */}
-            <div className="w-9 h-9 rounded-full bg-[#3A5B40]/10 border border-[#3A5B40]/40" />
+            <button
+              onClick={() => setShowLogoutPopup(true)}
+              className="w-9 h-9 rounded-full bg-[#3A5B40]/10 border border-[#3A5B40]/40 hover:bg-[#3A5B40]/20 transition"
+              title="Logout"
+            />
           </div>
         </header>
+
+        {/* LOGOUT POPUP */}
+        {showLogoutPopup && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+              <h3 className="text-lg font-semibold text-[#3A5B40] mb-2">
+                Konfirmasi Logout
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Apakah Anda yakin ingin logout?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutPopup(false)}
+                  className="flex-1 px-4 py-2 border border-[#3A5B40] text-[#3A5B40] rounded-md hover:bg-[#3A5B40]/5 transition"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={async () => {
+                    const result = await logout();
+                    setShowLogoutPopup(false);
+                    if (result) {
+                      navigate("/admin/login");
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 bg-[#3A5B40] text-white rounded-md hover:bg-[#2c4a34] transition"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* MAIN CONTENT */}
         <main className="flex-1 px-10 py-8 space-y-8">
