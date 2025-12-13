@@ -16,7 +16,6 @@ const ProfileMain = () => {
 
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
-  const [profilePic, setProfilePic] = useState(null);
   const [saving, setSaving] = useState(false);
   
   // State terpisah untuk form editing (tidak langsung update profileData)
@@ -43,9 +42,6 @@ const ProfileMain = () => {
         birthday: birthdayValue,
       });
       setEditGender(profileData.gender);
-      if (profileData.avatar_url) {
-        setProfilePic(profileData.avatar_url);
-      }
     }
   }, [profileData]);
 
@@ -149,65 +145,6 @@ const ProfileMain = () => {
     navigate("/", { replace: true });
   };
 
-  const handleUploadPic = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validasi file
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      alert('Format file harus JPG, JPEG, PNG, atau WEBP');
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Ukuran file maksimal 2MB');
-      return;
-    }
-
-    // Preview local
-    setProfilePic(URL.createObjectURL(file));
-
-    // Upload ke API
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const formData = new FormData();
-      formData.append('avatar', file);
-
-      const response = await fetch(
-        'https://pa-man-api.vercel.app/api/user/edit-avatar',
-        {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.status === 'Success' && result.data.avatar_url) {
-          // Update both local state and context
-          setProfilePic(result.data.avatar_url);
-          setProfileData({ ...profileData, avatar_url: result.data.avatar_url });
-          // Update context untuk sync ke sidebar dan halaman lain
-          fetchProfile();
-          alert('Avatar berhasil diupdate!');
-        }
-      } else {
-        const error = await response.json().catch(() => ({}));
-        console.error('Avatar upload error:', error);
-        alert(error.message || 'Gagal upload avatar');
-      }
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      alert('Terjadi kesalahan saat upload avatar');
-    }
-  };
-
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -221,7 +158,6 @@ const ProfileMain = () => {
           profileData={profileData} 
           loading={loading}
           onLogout={handleLogout}
-          onUploadPic={handleUploadPic}
         />
 
         {/* PROFILE FORM CARD */}

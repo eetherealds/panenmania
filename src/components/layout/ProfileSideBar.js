@@ -1,5 +1,7 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ProfileContext } from "../../context/ProfileContext";
+import { useContext } from "react";
 
 // ICONS & IMAGES
 import EditIcon from "../../assets/images/icons/edit.svg";
@@ -10,14 +12,71 @@ import ProfilePhoto from "../../assets/images/icons/pp.svg";
 
 const ProfileSideBar = ({ profileData, loading, onLogout, onUploadPic }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { fetchProfile } = useContext(ProfileContext);
   const isActive = (path) => location.pathname === path;
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validasi file
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Format file harus JPG, JPEG, PNG, atau WEBP');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran file maksimal 2MB');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/signin');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch(
+        'https://pa-man-api.vercel.app/api/user/edit-avatar',
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === 'Success') {
+          // Fetch profile untuk update context dengan avatar baru
+          await fetchProfile();
+          alert('Avatar berhasil diupdate!');
+        }
+      } else {
+        const error = await response.json().catch(() => ({}));
+        console.error('Avatar upload error:', error);
+        alert(error.message || 'Gagal upload avatar');
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Terjadi kesalahan saat upload avatar');
+    }
+  };
 
   return (
     <div className="w-full lg:w-72 bg-white px-6 py-8 rounded-[10px] shadow flex flex-col overflow-y-auto min-h-[calc(100vh-56px)]">
       <div className="flex flex-col items-center text-center">
         {/* Profile Pic + Edit */}
         <label className="relative cursor-pointer inline-block">
-          <input type="file" className="hidden" onChange={onUploadPic} />
+          <input type="file" className="hidden" onChange={handleAvatarUpload} />
           <div className="w-40 h-40 bg-[#F2F2F2] rounded-full flex items-center justify-center overflow-hidden">
             <img
               src={profileData?.avatar_url || ProfilePhoto}
