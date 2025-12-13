@@ -22,7 +22,9 @@ export const ProfileProvider = ({ children }) => {
         return;
       }
 
-      setLoading(true);
+      if (retryCount === 0) {
+        setLoading(true);
+      }
       console.log("Fetching profile with token:", token.substring(0, 20) + "...");
       
       const response = await fetch(
@@ -46,7 +48,9 @@ export const ProfileProvider = ({ children }) => {
         // Rate limit - retry after delay
         const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
         console.warn(`Rate limited (429). Retrying in ${delay}ms...`);
-        setTimeout(() => fetchProfile(retryCount + 1), delay);
+        // Wait for retry to complete before returning
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchProfile(retryCount + 1);
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error("Failed to fetch profile:", response.status, errorData);
@@ -54,7 +58,9 @@ export const ProfileProvider = ({ children }) => {
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
-      setLoading(false);
+      if (retryCount === 0) {
+        setLoading(false);
+      }
     }
   }, []);
 
