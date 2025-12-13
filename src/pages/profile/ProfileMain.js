@@ -1,6 +1,6 @@
 // src/pages/afterLogin/ProfileMain.js
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
@@ -17,6 +17,11 @@ const ProfileMain = () => {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize] = useState(6);
   
   // State terpisah untuk form editing (tidak langsung update profileData)
   const [editData, setEditData] = useState({
@@ -44,6 +49,61 @@ const ProfileMain = () => {
       setEditGender(profileData.gender);
     }
   }, [profileData]);
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `https://pa-man-api.vercel.app/api/products/?page=${currentPage}&limit=${pageSize}`,
+          {
+            method: "GET",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          let productsArray = [];
+
+          // Handle the response structure
+          if (result.data) {
+            if (result.data.results && Array.isArray(result.data.results)) {
+              // Products are in results array
+              productsArray = result.data.results;
+              setTotalPages(result.data.totalPages || 1);
+            } else if (Array.isArray(result.data)) {
+              // If data is already an array
+              productsArray = result.data;
+              setTotalPages(1);
+            }
+          }
+
+          // Format products for display
+          const formattedProducts = productsArray.map((product) => ({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
+            image: product.photo_url || "https://via.placeholder.com/260x160",
+            category: product.category,
+            rawPrice: product.price,
+          }));
+          setProducts(formattedProducts);
+        } else {
+          console.error("Failed to fetch products:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, [currentPage, pageSize]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -294,6 +354,85 @@ const ProfileMain = () => {
               </div>
             </form>
           </div>
+        </div>
+      </div>
+
+      {/* PRODUK REKOMENDASI SECTION */}
+      <div className="w-full px-6 lg:px-20 py-12 bg-[#F8FAF7]">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl font-bold text-[#344E41] mb-8">Produk untuk Anda</h2>
+          
+          {/* PRODUCT GRID */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-10 gap-x-6 mb-8">
+            {products.map((product) => (
+              <Link key={product.id} to={`/product/${product.id}`}>
+                <div className="bg-white rounded-3xl shadow-[0_4px_10px_rgba(0,0,0,0.08)] border border-[#E0E6D8] hover:shadow-xl transition-all duration-200 cursor-pointer w-full">
+                  <div className="w-full bg-[#F4F8F1] rounded-t-3xl p-6 h-[190px] flex items-center justify-center">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full object-contain"
+                    />
+                  </div>
+
+                  <div className="p-5 sm:p-6">
+                    <h3 className="text-[#344E41] font-bold text-[15px] sm:text-[17px] mb-2">
+                      {product.name}
+                    </h3>
+
+                    <p className="text-[#3A5A40] text-[12px] sm:text-[13px] mb-4 leading-relaxed">
+                      {product.description}
+                    </p>
+
+                    <p className="text-[#344E41] font-bold text-[15px] sm:text-[16px]">
+                      {product.price}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+
+            {products.length === 0 && !loadingProducts && (
+              <div className="col-span-full text-center text-sm text-[#3A5A40]/70 mt-6">
+                Tidak ada produk tersedia.
+              </div>
+            )}
+          </div>
+
+          {/* PAGINATION */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-[#3A5B40] text-[#3A5B40] hover:bg-[#3A5B40] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                ← Sebelumnya
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 rounded-lg border transition ${
+                    currentPage === page
+                      ? "bg-[#3A5B40] text-white border-[#3A5B40]"
+                      : "border-[#3A5B40] text-[#3A5B40] hover:bg-[#3A5B40]/10"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg border border-[#3A5B40] text-[#3A5B40] hover:bg-[#3A5B40] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Berikutnya →
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
