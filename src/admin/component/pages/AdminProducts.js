@@ -43,56 +43,84 @@ const AdminProducts = () => {
 
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [currentSort, setCurrentSort] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [pageSize] = useState(10);
 
-  // Fetch products from API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem("adminToken");
-        if (!token) {
-          console.warn("No admin token found");
-          setLoadingProducts(false);
-          return;
-        }
+  // Fetch products based on sort
+  const fetchProductsBySort = async (sortValue = null, page = 1) => {
+    try {
+      setLoadingProducts(true);
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        console.warn("No admin token found");
+        setLoadingProducts(false);
+        return;
+      }
 
-        const response = await fetch(
-          "https://pa-man-api.vercel.app/api/products/",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      let url = "https://pa-man-api.vercel.app/api/products/";
 
-        if (response.ok) {
-          const result = await response.json();
+      // If sort is specified, use the sort endpoint
+      if (sortValue) {
+        url = `https://pa-man-api.vercel.app/api/products/category?sort=${sortValue}&page=${page}&limit=${pageSize}`;
+      }
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        let productsArray = [];
+
+        if (sortValue) {
+          // When using sort endpoint
           if (result.data && Array.isArray(result.data)) {
-            // Format products for display
-            const formattedProducts = result.data.map((product) => ({
-              id: product.id,
-              name: product.name,
-              category: product.category,
-              price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
-              stock: product.stock,
-              status: product.stock > 0 ? "available" : "unavailable",
-              photo_url: product.photo_url,
-              description: product.description,
-              discounted_price: product.discounted_price,
-            }));
-            setProducts(formattedProducts);
+            productsArray = result.data;
+          }
+          // Get total from pagination info if available
+          if (result.pagination?.total) {
+            setTotalProducts(result.pagination.total);
           }
         } else {
-          console.error("Failed to fetch products:", response.status);
+          // When using regular endpoint
+          if (result.data && Array.isArray(result.data)) {
+            productsArray = result.data;
+            setTotalProducts(result.data.length);
+          }
         }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
 
-    fetchProducts();
+        // Format products for display
+        const formattedProducts = productsArray.map((product) => ({
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
+          stock: product.stock,
+          status: product.stock > 0 ? "available" : "unavailable",
+          photo_url: product.photo_url,
+          description: product.description,
+          discounted_price: product.discounted_price,
+        }));
+        setProducts(formattedProducts);
+        setCurrentPage(page);
+      } else {
+        console.error("Failed to fetch products:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  // Initial fetch - all products
+  useEffect(() => {
+    fetchProductsBySort(null, 1);
   }, []);
 
   // dropdown filter
@@ -109,21 +137,28 @@ const AdminProducts = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
-  const handleSortSelect = (value) => {
+  const handleSortSelect = async (value) => {
+    let label = "Urutkan Berdasarkan";
+    const sortValue = value === "Semua Kategori" ? null : value.toLowerCase().replace(" ", "-");
+
+    // Map display values to API sort values
     if (value === "Semua Kategori") {
       setFilterCategory("Semua Kategori");
-      setSortLabel("Urutkan Berdasarkan");
+      label = "Urutkan Berdasarkan";
     } else {
       setFilterCategory(value);
-      setSortLabel(value);
+      label = value;
     }
+
+    setSortLabel(label);
     setIsSortOpen(false);
+
+    // Fetch products with the selected sort
+    await fetchProductsBySort(sortValue, 1);
   };
 
-  const filteredProducts = useMemo(() => {
-    if (filterCategory === "Semua Kategori") return products;
-    return products.filter((p) => p.category === filterCategory);
-  }, [products, filterCategory]);
+  // Since we're using API-based sorting, filteredProducts is just products
+  const filteredProducts = products;
 
   // SELECT ALL logic
   const filteredIds = filteredProducts.map((p) => p.id);
@@ -396,7 +431,7 @@ const AdminProducts = () => {
                         border: "1px solid #E5E7EB",
                       }}
                     >
-                      {["Semua Kategori", "Beras", "Buah", "Sayur"].map(
+                      {["Semua Kategori", "Beras", "Buah", "Sayur", "In Stock", "Out of Stock"].map(
                         (opt) => (
                           <button
                             key={opt}
