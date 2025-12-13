@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { ProfileContext } from "../../context/ProfileContext";
+import { ProductsContext } from "../../context/ProductsContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 import ProfileSideBar from "../../components/layout/ProfileSideBar";
@@ -13,15 +14,18 @@ const ProfileMain = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profileData, setProfileData, loading, fetchProfile, logout } = useContext(ProfileContext);
+  const { products: allProducts, loading: loadingProducts } = useContext(ProductsContext);
 
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [pageSize] = useState(6);
+
+  // Paginate products
+  const startIdx = (currentPage - 1) * pageSize;
+  const paginatedProducts = allProducts.slice(startIdx, startIdx + pageSize);
+  const totalPages = Math.ceil(allProducts.length / pageSize);
   
   // State terpisah untuk form editing (tidak langsung update profileData)
   const [editData, setEditData] = useState({
@@ -49,61 +53,6 @@ const ProfileMain = () => {
       setEditGender(profileData.gender);
     }
   }, [profileData]);
-
-  // Fetch products from API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoadingProducts(true);
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          `https://pa-man-api.vercel.app/api/products/?page=${currentPage}&limit=${pageSize}`,
-          {
-            method: "GET",
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          let productsArray = [];
-
-          // Handle the response structure
-          if (result.data) {
-            if (result.data.results && Array.isArray(result.data.results)) {
-              // Products are in results array
-              productsArray = result.data.results;
-              setTotalPages(result.data.totalPages || 1);
-            } else if (Array.isArray(result.data)) {
-              // If data is already an array
-              productsArray = result.data;
-              setTotalPages(1);
-            }
-          }
-
-          // Format products for display
-          const formattedProducts = productsArray.map((product) => ({
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            price: `Rp ${product.price?.toLocaleString("id-ID") || 0}`,
-            image: product.photo_url || "https://via.placeholder.com/260x160",
-            category: product.category,
-            rawPrice: product.price,
-          }));
-          setProducts(formattedProducts);
-        } else {
-          console.error("Failed to fetch products:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-
-    fetchProducts();
-  }, [currentPage, pageSize]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -364,7 +313,7 @@ const ProfileMain = () => {
           
           {/* PRODUCT GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-10 gap-x-6 mb-8">
-            {products.map((product) => (
+            {paginatedProducts.map((product) => (
               <Link key={product.id} to={`/product/${product.id}`}>
                 <div className="bg-white rounded-3xl shadow-[0_4px_10px_rgba(0,0,0,0.08)] border border-[#E0E6D8] hover:shadow-xl transition-all duration-200 cursor-pointer w-full">
                   <div className="w-full bg-[#F4F8F1] rounded-t-3xl p-6 h-[190px] flex items-center justify-center">
@@ -385,14 +334,14 @@ const ProfileMain = () => {
                     </p>
 
                     <p className="text-[#344E41] font-bold text-[15px] sm:text-[16px]">
-                      {product.price}
+                      {product.priceFormatted}
                     </p>
                   </div>
                 </div>
               </Link>
             ))}
 
-            {products.length === 0 && !loadingProducts && (
+            {paginatedProducts.length === 0 && !loadingProducts && (
               <div className="col-span-full text-center text-sm text-[#3A5A40]/70 mt-6">
                 Tidak ada produk tersedia.
               </div>

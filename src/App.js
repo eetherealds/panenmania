@@ -3,6 +3,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { ProfileProvider } from "./context/ProfileContext";
 import { AdminProvider } from "./context/AdminContext";
+import { ProductsProvider } from "./context/ProductsContext";
 
 /** Auth */
 import SignIn from "./pages/auth/SignIn";
@@ -51,11 +52,12 @@ const Private = ({ children }) => {
 
 function App() {
   return (
-    <ProfileProvider>
-      <AdminProvider>
-        <div className="bg-[#FFFEF6] min-h-screen">
-        {/* TIDAK ADA padding-top di sini */}
-        <Routes>
+    <ProductsProvider>
+      <ProfileProvider>
+        <AdminProvider>
+          <div className="bg-[#FFFEF6] min-h-screen">
+          {/* TIDAK ADA padding-top di sini */}
+          <Routes>
         {/* Landing */}
         <Route
           path="/"
@@ -211,6 +213,7 @@ function App() {
         </div>
       </AdminProvider>
     </ProfileProvider>
+    </ProductsProvider>
   );
 }
 

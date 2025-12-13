@@ -1,6 +1,7 @@
 // src/components/home/HomeContent.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ProductsContext } from "../../context/ProductsContext";
 
 // Banner
 import HeroFarmer from "../../assets/images/banners/petani.svg";
@@ -35,41 +36,12 @@ import IconSearch from "../../assets/images/icons/pencarian.svg";
 const HomeContent = ({ isLoggedIn }) => {
   const navigate = useNavigate();
   const catalogBase = isLoggedIn ? "/catalog/login" : "/catalog";
+  const { products: allProducts, loading: loadingProducts } = useContext(ProductsContext);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
 
-  // Fetch products from API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = isLoggedIn ? localStorage.getItem("token") : null;
-        const response = await fetch(
-          "https://pa-man-api.vercel.app/api/products/",
-          {
-            method: "GET",
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data && Array.isArray(result.data)) {
-            setProducts(result.data.slice(0, 8)); // Get first 8 products
-          }
-        } else {
-          console.error("Failed to fetch products:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-
-    fetchProducts();
-  }, [isLoggedIn]);
+  // Get first 8 products
+  const products = allProducts.slice(0, 8);
 
   // Data statistik
   const statistikItems = [
@@ -301,7 +273,7 @@ const HomeContent = ({ isLoggedIn }) => {
                       {/* Gambar produk */}
                       <div className="w-full bg-[#F4F8F1] rounded-t-3xl p-6 h-[180px] sm:h-[200px] flex items-center justify-center">
                         <img
-                          src={product.photo_url || BawangMerah}
+                          src={product.image || BawangMerah}
                           alt={product.name}
                           className="h-full object-contain"
                         />
@@ -318,7 +290,7 @@ const HomeContent = ({ isLoggedIn }) => {
                         </p>
 
                         <p className="text-[#344E41] font-bold text-[15px] sm:text-[16px]">
-                          Rp{product.price?.toLocaleString("id-ID") || 0}
+                          {product.priceFormatted}
                         </p>
                       </div>
                     </div>
