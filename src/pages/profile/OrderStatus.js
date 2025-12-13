@@ -26,6 +26,7 @@ const OrderStatus = () => {
 
   // State untuk foto profil sementara (preview)
   const [profilePic, setProfilePic] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     full_name: "",
     email: "",
@@ -37,7 +38,10 @@ const OrderStatus = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) return;
+        if (!token) {
+          setLoading(false);
+          return;
+        }
 
         const response = await fetch(
           "https://pa-man-api.vercel.app/api/user/my-profile",
@@ -57,9 +61,13 @@ const OrderStatus = () => {
               setProfilePic(result.data.avatar_url);
             }
           }
+        } else {
+          console.error("Failed to fetch profile:", response.status);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -170,7 +178,9 @@ const OrderStatus = () => {
               </div>
             </label>
 
-            <p className="mt-3 font-semibold text-lg">{profileData.full_name || "Loading..."}</p>
+            <p className="mt-3 font-semibold text-lg">
+              {loading ? "Loading..." : profileData.full_name || "User"}
+            </p>
             <p className="text-sm text-gray-600">{profileData.email}</p>
           </div>
 
