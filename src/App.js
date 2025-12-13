@@ -207,7 +207,6 @@ function App() {
         <Route path="/admin/users" element={<AdminUsers />} />
       </Routes>
       </div>
-    </ProfileProvider>
-}
+    </ProfileProvider>  );}
 
 export default App;
