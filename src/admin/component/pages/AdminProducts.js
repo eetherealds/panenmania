@@ -63,8 +63,9 @@ const AdminProducts = () => {
 
       // If sort is specified, use the sort endpoint
       if (sortValue) {
-        url = `https://pa-man-api.vercel.app/api/products/category?sort=${sortValue}&page=${page}&limit=${pageSize}`;
+        url = `https://pa-man-api.vercel.app/api/products/category?sort=beras&page=${page}&limit=${pageSize}`;
       }
+
 
       const response = await fetch(url, {
         method: "GET",
