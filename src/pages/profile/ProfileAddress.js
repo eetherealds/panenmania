@@ -1,6 +1,7 @@
 // src/pages/afterLogin/ProfileAddress.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 import AddressModal from "./AddressModal";
@@ -17,6 +18,7 @@ import PencilIcon from "../../assets/images/icons/pensil.svg";
 const ProfileAddress = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { profileData, loading } = useContext(ProfileContext);
 
   const [addresses, setAddresses] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -24,61 +26,12 @@ const ProfileAddress = () => {
   const [profilePic, setProfilePic] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState({
-    full_name: "",
-    email: "",
-    avatar_url: "",
-  });
-
-  // Fetch profile dan addresses dari API
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(
-          "https://pa-man-api.vercel.app/api/user/my-profile",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.status === "Success" && result.data) {
-            setProfileData(result.data);
-            if (result.data.avatar_url) {
-              setProfilePic(result.data.avatar_url);
-            }
-          }
-        } else {
-          console.error("Failed to fetch profile:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
 
   // upload foto profil
   const handleUploadPic = (e) => {
     const file = e.target.files[0];
     if (file) setProfilePic(URL.createObjectURL(file));
   };
-
-  // buka modal tambah alamat
   const openAdd = () => {
     setEditing(null);
     setShowModal(true);

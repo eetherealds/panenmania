@@ -1,6 +1,7 @@
 // src/pages/afterLogin/OrderStatus.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 
@@ -20,8 +21,7 @@ import IconSelesai from "../../assets/images/icons/selesai.svg";
 const OrderStatus = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // State untuk kontrol popup logout
+  const { profileData, loading } = useContext(ProfileContext);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   // State untuk foto profil sementara (preview)
@@ -33,68 +33,21 @@ const OrderStatus = () => {
     avatar_url: "",
   });
 
-  // Fetch profile data from API
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(
-          "https://pa-man-api.vercel.app/api/user/my-profile",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.status === "Success" && result.data) {
-            setProfileData(result.data);
-            if (result.data.avatar_url) {
-              setProfilePic(result.data.avatar_url);
-            }
-          }
-        } else {
-          console.error("Failed to fetch profile:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  // State untuk filter tab status pesanan (null = semua)
-  const [activeTab, setActiveTab] = useState(null);
-
-  // Handler buka popup logout
-  const handleLogout = () => setShowLogoutPopup(true);
-
-  // Handler tutup popup logout
-  const closeLogoutPopup = () => setShowLogoutPopup(false);
-
-  // Handler konfirmasi logout
-  const confirmLogout = () => {
-    localStorage.removeItem("token");
-    setShowLogoutPopup(false);
-    navigate("/", { replace: true });
-  };
-
   // Handler unggah foto profil (hanya untuk preview lokal)
   const handleUploadPic = (e) => {
     const file = e.target.files[0];
     if (file) setProfilePic(URL.createObjectURL(file));
   };
+
+  // Set avatar dari context
+  useEffect(() => {
+    if (profileData.avatar_url) {
+      setProfilePic(profileData.avatar_url);
+    }
+  }, [profileData.avatar_url]);
+
+  // State untuk filter tab status pesanan (null = semua)
+  const [activeTab, setActiveTab] = useState(null);
 
   // Fungsi penanda menu aktif pada sidebar
   const isActiveMenu = (path) => location.pathname === path;

@@ -1,6 +1,7 @@
 // src/App.js
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import { ProfileProvider } from "./context/ProfileContext";
 
 /** Auth */
 import SignIn from "./pages/auth/SignIn";
@@ -49,9 +50,10 @@ const Private = ({ children }) => {
 
 function App() {
   return (
-    <div className="bg-[#FFFEF6] min-h-screen">
-      {/* TIDAK ADA padding-top di sini */}
-      <Routes>
+    <ProfileProvider>
+      <div className="bg-[#FFFEF6] min-h-screen">
+        {/* TIDAK ADA padding-top di sini */}
+        <Routes>
         {/* Landing */}
         <Route
           path="/"
@@ -204,8 +206,8 @@ function App() {
         <Route path="/admin/orders" element={<AdminOrders />} />
         <Route path="/admin/users" element={<AdminUsers />} />
       </Routes>
-    </div>
-  );
+      </div>
+    </ProfileProvider>
 }
 
 export default App;

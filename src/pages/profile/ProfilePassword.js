@@ -1,6 +1,7 @@
 // src/pages/afterLogin/ProfilePassword.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 
@@ -14,8 +15,7 @@ import ProfilePhoto from "../../assets/images/icons/pp.svg";
 const ProfilePassword = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // State untuk input kata sandi dan pesan kesalahan
+  const { profileData, loading } = useContext(ProfileContext);
   const [oldPass, setOldPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -34,52 +34,18 @@ const ProfilePassword = () => {
     avatar_url: "",
   });
 
-  // Fetch profile data from API
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(
-          "https://pa-man-api.vercel.app/api/user/my-profile",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.status === "Success" && result.data) {
-            setProfileData(result.data);
-            if (result.data.avatar_url) {
-              setProfilePic(result.data.avatar_url);
-            }
-          }
-        } else {
-          console.error("Failed to fetch profile:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
   // Handler unggah foto profil (hanya untuk keperluan preview)
   const handleUploadPic = (e) => {
     const f = e.target.files[0];
     if (f) setProfilePic(URL.createObjectURL(f));
   };
+
+  // Set avatar dari context
+  useEffect(() => {
+    if (profileData.avatar_url) {
+      setProfilePic(profileData.avatar_url);
+    }
+  }, [profileData.avatar_url]);
 
   // Fungsi validasi sederhana untuk form ubah kata sandi
   const validate = () => {

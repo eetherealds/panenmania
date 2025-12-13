@@ -1,6 +1,7 @@
 // src/pages/afterLogin/OrderHistory.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 
@@ -14,8 +15,7 @@ import ProfilePhoto from "../../assets/images/icons/pp.svg";
 const OrderHistory = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // State kontrol popup logout
+  const { profileData, loading } = useContext(ProfileContext);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   // State foto profil sementara (preview)
@@ -27,46 +27,18 @@ const OrderHistory = () => {
     avatar_url: "",
   });
 
-  // Fetch profile data from API
+  // Handler unggah foto profil (preview lokal)
+  const handleUploadPic = (e) => {
+    const file = e.target.files[0];
+    if (file) setProfilePic(URL.createObjectURL(file));
+  };
+
+  // Set avatar dari context
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(
-          "https://pa-man-api.vercel.app/api/user/my-profile",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.status === "Success" && result.data) {
-            setProfileData(result.data);
-            if (result.data.avatar_url) {
-              setProfilePic(result.data.avatar_url);
-            }
-          }
-        } else {
-          console.error("Failed to fetch profile:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
+    if (profileData.avatar_url) {
+      setProfilePic(profileData.avatar_url);
+    }
+  }, [profileData.avatar_url]);
 
   // Handler membuka popup logout
   const handleLogout = () => setShowLogoutPopup(true);
