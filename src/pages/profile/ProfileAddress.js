@@ -18,37 +18,7 @@ const ProfileAddress = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      name: "Dearni Lambardo Saragih",
-      detail:
-        "Jl. Kenanga No. 47, RT.03/RW.05, Kompleks Perumahan Sukamaju Indah, Kelurahan Sukamaju, Kecamatan Bogor Barat, Kota Bogor, Jawa Barat 16112.",
-      isPrimary: true,
-    },
-    {
-      id: 2,
-      name: "Dearni Lambardo Saragih",
-      detail:
-        "Jl. Melati Indah Blok B2 No. 10, Perumahan Melati Asri, Kelurahan Helvetia, Kecamatan Medan Helvetia, Kota Medan, Sumatera Utara 20234.",
-      isPrimary: false,
-    },
-    {
-      id: 3,
-      name: "Dearni Lambardo Saragih",
-      detail:
-        "Jl. Pahlawan II No. 88, Perumahan Taman Sari, Kelurahan Tanjung Rejo, Kecamatan Klojen, Kota Malang, Jawa Timur 65112.",
-      isPrimary: false,
-    },
-    {
-      id: 4,
-      name: "Dearni Lambardo Saragih",
-      detail:
-        "Jl. Raya Sukamulia KM. 5, Desa Sukajaya, Kecamatan Cikarang Selatan, Kabupaten Bekasi, Jawa Barat 17550.",
-      isPrimary: false,
-    },
-  ]);
-
+  const [addresses, setAddresses] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
   const [profilePic, setProfilePic] = useState(null);
@@ -61,7 +31,7 @@ const ProfileAddress = () => {
     avatar_url: "",
   });
 
-  // Fetch profile data from API
+  // Fetch profile dan addresses dari API
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -132,40 +102,60 @@ const ProfileAddress = () => {
     );
   };
 
-  // simpan alamat baru / edit
-  const saveAddress = (payload) => {
-    if (editing) {
-      setAddresses((prev) =>
-        prev.map((a) =>
-          a.id === editing.id
-            ? {
-                ...a,
-                name: payload.name || a.name,
-                detail: payload.detail,
-                isPrimary: payload.isPrimary,
-              }
-            : payload.isPrimary
-            ? { ...a, isPrimary: false }
-            : a
-        )
-      );
-    } else {
-      const newId = Math.max(0, ...addresses.map((a) => a.id)) + 1;
-      const newAddress = {
-        id: newId,
-        name: payload.name || "Dearni Lambardo Saragih",
-        detail: payload.detail,
-        isPrimary: payload.isPrimary || false,
+  // simpan alamat baru / edit via API
+  const saveAddress = async (payload) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      // Format data untuk API
+      const addressData = {
+        recipient_name: payload.name,
+        street: payload.street || "",
+        kecamatan: payload.kecamatan || "",
+        city: payload.city || "",
+        province: payload.province || "",
+        postal_code: payload.postal_code || "",
+        detail: payload.detail || "",
       };
-      setAddresses((prev) =>
-        (payload.isPrimary
-          ? prev.map((a) => ({ ...a, isPrimary: false }))
-          : prev
-        ).concat(newAddress)
+
+      const response = await fetch(
+        "https://pa-man-api.vercel.app/api/user/address",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(addressData),
+        }
       );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data) {
+          // Tambah address baru ke list
+          const newAddress = {
+            id: result.data.id,
+            name: result.data.recipient_name,
+            detail: `${result.data.street}, ${result.data.kecamatan}, ${result.data.city}, ${result.data.province} ${result.data.postal_code}`,
+            isPrimary: result.data.is_default || false,
+          };
+          setAddresses((prev) => [...prev, newAddress]);
+          setShowModal(false);
+          setShowSuccess(true);
+        }
+      } else {
+        const error = await response.json();
+        alert(error.message || "Gagal menambah alamat");
+      }
+    } catch (error) {
+      console.error("Error saving address:", error);
+      alert("Terjadi kesalahan saat menyimpan alamat");
     }
-    setShowModal(false);
-    setShowSuccess(true);
   };
 
   // buka popup logout

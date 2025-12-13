@@ -88,11 +88,14 @@ const AddressModal = ({ onClose, onSave, initialData }) => {
     const provName =
       provinsiList.find((p) => String(p.id) === String(prov))?.name || prov;
 
-    const detail = `${street}, ${subdist}, ${city}, ${provName}, ${postal}. ${extra}`.trim();
-
     onSave({
       name: label,
-      detail,
+      street: street,
+      city: city,
+      kecamatan: subdist,
+      province: provName,
+      postal_code: postal,
+      detail: extra,
       isPrimary: initialData?.isPrimary ?? false,
     });
   };
