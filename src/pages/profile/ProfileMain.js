@@ -190,12 +190,16 @@ const ProfileMain = () => {
       if (response.ok) {
         const result = await response.json();
         if (result.status === 'Success' && result.data.avatar_url) {
+          // Update both local state and context
           setProfilePic(result.data.avatar_url);
           setProfileData({ ...profileData, avatar_url: result.data.avatar_url });
+          // Update context untuk sync ke sidebar dan halaman lain
+          fetchProfile();
           alert('Avatar berhasil diupdate!');
         }
       } else {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
+        console.error('Avatar upload error:', error);
         alert(error.message || 'Gagal upload avatar');
       }
     } catch (error) {
