@@ -113,6 +113,10 @@ function CatalogBeforeLogin() {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+  };
+
   // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
