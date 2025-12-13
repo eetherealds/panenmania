@@ -13,7 +13,7 @@ import ProfilePhoto from "../../assets/images/icons/pp.svg";
 const ProfileSideBar = ({ profileData, loading, onLogout, onUploadPic }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { fetchProfile } = useContext(ProfileContext);
+  const { fetchProfile, logout } = useContext(ProfileContext);
   const isActive = (path) => location.pathname === path;
 
   const handleAvatarUpload = async (e) => {
@@ -183,7 +183,12 @@ const ProfileSideBar = ({ profileData, loading, onLogout, onUploadPic }) => {
 
       {/* BUTTON KELUAR */}
       <button
-        onClick={onLogout}
+        onClick={async () => {
+          const result = await logout();
+          if (result) {
+            navigate("/");
+          }
+        }}
         className="mt-20 self-center flex items-center justify-center gap-2 bg-[#3A5B40] px-8 py-2 rounded-[10px] text-sm font-semibold text-white hover:bg-[#314c35] transition"
       >
         <img src={OutIcon} alt="Keluar" className="w-4 h-4" />

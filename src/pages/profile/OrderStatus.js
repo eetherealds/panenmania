@@ -14,7 +14,7 @@ import IconSelesai from "../../assets/images/icons/selesai.svg";
 
 const OrderStatus = () => {
   const navigate = useNavigate();
-  const { profileData, loading } = useContext(ProfileContext);
+  const { profileData, loading, logout } = useContext(ProfileContext);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   // State untuk foto profil sementara (preview)
@@ -40,10 +40,12 @@ const OrderStatus = () => {
   const closeLogoutPopup = () => setShowLogoutPopup(false);
 
   // Handler konfirmasi logout dan kembali ke halaman utama
-  const confirmLogout = () => {
-    localStorage.removeItem("token");
+  const confirmLogout = async () => {
+    const result = await logout();
     setShowLogoutPopup(false);
-    navigate("/", { replace: true });
+    if (result) {
+      navigate("/", { replace: true });
+    }
   };
 
   // State untuk filter tab status pesanan (null = semua)

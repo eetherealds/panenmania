@@ -12,7 +12,7 @@ import ProfilePhoto from "../../assets/images/icons/pp.svg";
 const ProfileMain = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profileData, setProfileData, loading, fetchProfile } = useContext(ProfileContext);
+  const { profileData, setProfileData, loading, fetchProfile, logout } = useContext(ProfileContext);
 
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
@@ -139,10 +139,12 @@ const ProfileMain = () => {
   const handleLogout = () => setShowLogoutPopup(true);
   const closeLogoutPopup = () => setShowLogoutPopup(false);
 
-  const confirmLogout = () => {
-    localStorage.removeItem("token");
+  const confirmLogout = async () => {
+    const result = await logout();
     setShowLogoutPopup(false);
-    navigate("/", { replace: true });
+    if (result) {
+      navigate("/", { replace: true });
+    }
   };
 
   const isActive = (path) => location.pathname === path;

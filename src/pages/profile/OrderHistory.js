@@ -8,7 +8,7 @@ import Popup from "../../components/common/Popup";
 
 const OrderHistory = () => {
   const navigate = useNavigate();
-  const { profileData, loading } = useContext(ProfileContext);
+  const { profileData, loading, logout } = useContext(ProfileContext);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   // State foto profil sementara (preview)
@@ -34,10 +34,12 @@ const OrderHistory = () => {
   const closeLogoutPopup = () => setShowLogoutPopup(false);
 
   // Handler konfirmasi logout dan kembali ke halaman utama
-  const confirmLogout = () => {
-    localStorage.removeItem("token");
+  const confirmLogout = async () => {
+    const result = await logout();
     setShowLogoutPopup(false);
-    navigate("/", { replace: true });
+    if (result) {
+      navigate("/", { replace: true });
+    }
   };
 
 

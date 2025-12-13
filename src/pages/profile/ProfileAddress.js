@@ -20,6 +20,7 @@ const ProfileAddress = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { profileData, loading } = useContext(ProfileContext);
+  const { logout } = useContext(ProfileContext);
 
   const [addresses, setAddresses] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -209,10 +210,12 @@ const ProfileAddress = () => {
   const closeLogoutPopup = () => setShowLogout(false);
 
   // konfirmasi logout
-  const confirmLogout = () => {
-    localStorage.removeItem("token");
+  const confirmLogout = async () => {
+    const result = await logout();
     setShowLogout(false);
-    navigate("/", { replace: true });
+    if (result) {
+      navigate("/", { replace: true });
+    }
   };
 
   const isActive = (path) => location.pathname === path;

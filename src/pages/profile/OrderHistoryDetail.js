@@ -1,6 +1,7 @@
 // src/pages/afterLogin/OrderHistoryDetail.js
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 
@@ -21,6 +22,7 @@ import packageIcon from "../../assets/images/icons/package.png";
 const OrderHistoryDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useContext(ProfileContext);
 
   // State kontrol popup logout
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
@@ -35,10 +37,12 @@ const OrderHistoryDetail = () => {
   const closeLogoutPopup = () => setShowLogoutPopup(false);
 
   // Handler konfirmasi logout dan penghapusan token
-  const confirmLogout = () => {
-    localStorage.removeItem("token");
+  const confirmLogout = async () => {
+    const result = await logout();
     setShowLogoutPopup(false);
-    navigate("/", { replace: true });
+    if (result) {
+      navigate("/", { replace: true });
+    }
   };
 
   // Handler unggah foto profil (hanya untuk preview lokal)

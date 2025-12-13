@@ -17,6 +17,7 @@ const ProfilePassword = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { profileData, loading } = useContext(ProfileContext);
+  const { logout } = useContext(ProfileContext);
   const [oldPass, setOldPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -116,9 +117,11 @@ const ProfilePassword = () => {
   };
 
   // Handler konfirmasi logout dan penghapusan token
-  const confirmLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/", { replace: true });
+  const confirmLogout = async () => {
+    const result = await logout();
+    if (result) {
+      navigate("/", { replace: true });
+    }
   };
 
   // Fungsi untuk menentukan menu aktif pada sidebar

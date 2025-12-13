@@ -64,6 +64,73 @@ export const ProfileProvider = ({ children }) => {
     }
   }, []);
 
+  // Logout function yang call API
+  const logout = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // Token sudah tidak ada, langsung clear dan redirect
+        localStorage.removeItem("token");
+        localStorage.removeItem("profileData");
+        setProfileData({
+          full_name: "",
+          email: "",
+          phone_number: "",
+          gender: "",
+          birthday: "",
+          avatar_url: "",
+        });
+        return true;
+      }
+
+      // Call API logout
+      const response = await fetch(
+        "https://pa-man-api.vercel.app/api/user/logout",
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Clear token dan cache dari localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("profileData");
+      setProfileData({
+        full_name: "",
+        email: "",
+        phone_number: "",
+        gender: "",
+        birthday: "",
+        avatar_url: "",
+      });
+
+      if (response.ok) {
+        console.log("Logout berhasil dari API");
+        return true;
+      } else {
+        console.warn("Logout API returned status:", response.status);
+        // Tetap return true karena token sudah dihapus dari local
+        return true;
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Tetap clear token meskipun API error
+      localStorage.removeItem("token");
+      localStorage.removeItem("profileData");
+      setProfileData({
+        full_name: "",
+        email: "",
+        phone_number: "",
+        gender: "",
+        birthday: "",
+        avatar_url: "",
+      });
+      return true;
+    }
+  }, []);
+
   // Load dari localStorage jika ada, fetch dari API di background
   useEffect(() => {
     // Load dari cache localStorage
@@ -83,7 +150,7 @@ export const ProfileProvider = ({ children }) => {
   }, [fetchProfile]);
 
   return (
-    <ProfileContext.Provider value={{ profileData, setProfileData, loading, fetchProfile }}>
+    <ProfileContext.Provider value={{ profileData, setProfileData, loading, fetchProfile, logout }}>
       {children}
     </ProfileContext.Provider>
   );
