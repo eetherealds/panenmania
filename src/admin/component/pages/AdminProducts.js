@@ -75,6 +75,7 @@ const AdminProducts = () => {
 
       if (response.ok) {
         const result = await response.json();
+        console.log("API Response:", result, "Sort Value:", sortValue);
         let productsArray = [];
 
         if (sortValue) {
@@ -93,6 +94,7 @@ const AdminProducts = () => {
             setTotalProducts(result.data.length);
           }
         }
+        console.log("Products Array:", productsArray);
 
         // Format products for display
         const formattedProducts = productsArray.map((product) => ({
