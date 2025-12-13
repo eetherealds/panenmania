@@ -1,5 +1,5 @@
 // src/pages/afterLogin/ProfilePassword.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
@@ -27,6 +27,45 @@ const ProfilePassword = () => {
 
   // State untuk menyimpan sementara foto profil yang diunggah
   const [profilePic, setProfilePic] = useState(null);
+  const [profileData, setProfileData] = useState({
+    full_name: "",
+    email: "",
+    avatar_url: "",
+  });
+
+  // Fetch profile data from API
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await fetch(
+          "https://pa-man-api.vercel.app/api/user/my-profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.status === "Success" && result.data) {
+            setProfileData(result.data);
+            if (result.data.avatar_url) {
+              setProfilePic(result.data.avatar_url);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   // Handler unggah foto profil (hanya untuk keperluan preview)
   const handleUploadPic = (e) => {
@@ -38,18 +77,73 @@ const ProfilePassword = () => {
   const validate = () => {
     let temp = {};
     if (!oldPass) temp.old = "Kata sandi lama tidak boleh kosong!";
+    else if (oldPass.length < 8) temp.old = "Kata sandi lama minimal 8 karakter!";
+    
     if (!newPass) temp.new = "Kata sandi baru tidak boleh kosong!";
-    if (newPass !== confirm)
-      temp.conf = "Konfirmasi kata sandi tidak cocok!";
+    else if (newPass.length < 8) temp.new = "Kata sandi baru minimal 8 karakter!";
+    
+    if (!confirm) temp.conf = "Konfirmasi kata sandi tidak boleh kosong!";
+    else if (newPass !== confirm) temp.conf = "Konfirmasi kata sandi tidak cocok!";
+    
     setErrors(temp);
     return Object.keys(temp).length === 0;
   };
 
   // Handler ketika tombol simpan ditekan
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    setShowSuccess(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      const response = await fetch(
+        "https://pa-man-api.vercel.app/api/user/change-password",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            old_password: oldPass,
+            new_password: newPass,
+            new_password_confirmation: confirm,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === "Success") {
+          // Reset form
+          setOldPass("");
+          setNewPass("");
+          setConfirm("");
+          setErrors({});
+          setShowSuccess(true);
+        }
+      } else {
+        const error = await response.json();
+        // Tampilkan error dari API
+        if (error.message) {
+          if (error.message.includes("old password")) {
+            setErrors({ old: "Kata sandi lama tidak sesuai!" });
+          } else {
+            alert(error.message);
+          }
+        } else {
+          alert("Gagal mengubah kata sandi");
+        }
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      alert("Terjadi kesalahan saat mengubah kata sandi");
+    }
   };
 
   // Handler konfirmasi logout dan penghapusan token
@@ -84,7 +178,8 @@ const ProfilePassword = () => {
               </div>
             </label>
 
-            <p className="mt-3 font-semibold text-lg">Dearni Lambardo</p>
+            <p className="mt-3 font-semibold text-lg">{profileData.full_name || "Loading..."}</p>
+            <p className="text-sm text-gray-600">{profileData.email}</p>
           </div>
 
           {/* MENU */}

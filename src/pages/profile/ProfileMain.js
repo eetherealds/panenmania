@@ -26,6 +26,7 @@ const ProfileMain = () => {
     phone_number: "",
     gender: "",
     birthday: "",
+    avatar_url: "",
   });
 
   // Fetch profile data from API
@@ -53,6 +54,9 @@ const ProfileMain = () => {
           if (result.status === "Success" && result.data) {
             setProfileData(result.data);
             setGender(result.data.gender);
+            if (result.data.avatar_url) {
+              setProfilePic(result.data.avatar_url);
+            }
           }
         } else {
           // Token might be invalid
@@ -71,9 +75,53 @@ const ProfileMain = () => {
     fetchProfile();
   }, [navigate]);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setShowSuccessPopup(true);
+    
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      // Prepare data untuk API
+      const updateData = {
+        full_name: profileData.full_name,
+        email: profileData.email,
+        phone_number: profileData.phone_number,
+        gender: gender,
+        birthday: profileData.birthday,
+      };
+
+      const response = await fetch(
+        "https://pa-man-api.vercel.app/api/user/edit-profile-data",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === "Success") {
+          // Update state dengan data terbaru
+          setProfileData(result.data[0]);
+          setGender(result.data[0].gender);
+          setShowSuccessPopup(true);
+        }
+      } else {
+        const error = await response.json();
+        alert(error.message || "Gagal menyimpan perubahan");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Terjadi kesalahan saat menyimpan");
+    }
   };
 
   const handleLogout = () => setShowLogoutPopup(true);
@@ -85,9 +133,59 @@ const ProfileMain = () => {
     navigate("/", { replace: true });
   };
 
-  const handleUploadPic = (e) => {
+  const handleUploadPic = async (e) => {
     const file = e.target.files[0];
-    if (file) setProfilePic(URL.createObjectURL(file));
+    if (!file) return;
+
+    // Validasi file
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Format file harus JPG, JPEG, PNG, atau WEBP');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran file maksimal 2MB');
+      return;
+    }
+
+    // Preview local
+    setProfilePic(URL.createObjectURL(file));
+
+    // Upload ke API
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch(
+        'https://pa-man-api.vercel.app/api/user/edit-avatar',
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === 'Success' && result.data.avatar_url) {
+          setProfilePic(result.data.avatar_url);
+          setProfileData({ ...profileData, avatar_url: result.data.avatar_url });
+          alert('Avatar berhasil diupdate!');
+        }
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Gagal upload avatar');
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Terjadi kesalahan saat upload avatar');
+    }
   };
 
   const isActive = (path) => location.pathname === path;
@@ -269,7 +367,10 @@ const ProfileMain = () => {
                 <div className="flex flex-wrap gap-8">
                   {/* Perempuan */}
                   <div
-                    onClick={() => setGender("Perempuan")}
+                    onClick={() => {
+                      setGender("Perempuan");
+                      setProfileData({ ...profileData, gender: "Perempuan" });
+                    }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
                     <span
@@ -291,17 +392,20 @@ const ProfileMain = () => {
 
                   {/* Laki-Laki */}
                   <div
-                    onClick={() => setGender("Laki-Laki")}
+                    onClick={() => {
+                      setGender("Laki");
+                      setProfileData({ ...profileData, gender: "Laki" });
+                    }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
                     <span
                       className={`w-5 h-5 rounded-full border-2 border-[#3A5B40] flex items-center justify-center ${
-                        gender === "Laki-Laki"
+                        gender === "Laki"
                           ? "bg-[#3A5B40]/10"
                           : "bg-transparent"
                       }`}
                     >
-                      {gender === "Laki-Laki" && (
+                      {gender === "Laki" && (
                         <span className="w-2.5 h-2.5 rounded-full bg-[#3A5B40]" />
                       )}
                     </span>

@@ -1,5 +1,5 @@
 // src/pages/afterLogin/OrderStatus.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
@@ -26,6 +26,45 @@ const OrderStatus = () => {
 
   // State untuk foto profil sementara (preview)
   const [profilePic, setProfilePic] = useState(null);
+  const [profileData, setProfileData] = useState({
+    full_name: "",
+    email: "",
+    avatar_url: "",
+  });
+
+  // Fetch profile data from API
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await fetch(
+          "https://pa-man-api.vercel.app/api/user/my-profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.status === "Success" && result.data) {
+            setProfileData(result.data);
+            if (result.data.avatar_url) {
+              setProfilePic(result.data.avatar_url);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   // State untuk filter tab status pesanan (null = semua)
   const [activeTab, setActiveTab] = useState(null);
@@ -131,7 +170,8 @@ const OrderStatus = () => {
               </div>
             </label>
 
-            <p className="mt-3 font-semibold text-lg">Dearni Lambardo</p>
+            <p className="mt-3 font-semibold text-lg">{profileData.full_name || "Loading..."}</p>
+            <p className="text-sm text-gray-600">{profileData.email}</p>
           </div>
 
           {/* MENU SIDEBAR */}
