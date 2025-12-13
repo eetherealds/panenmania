@@ -13,8 +13,8 @@ export const ProfileProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  // Fetch profile dari API
-  const fetchProfile = useCallback(async () => {
+  // Fetch profile dari API dengan retry logic untuk 429 errors
+  const fetchProfile = useCallback(async (retryCount = 0) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
@@ -37,6 +37,11 @@ export const ProfileProvider = ({ children }) => {
           // Simpan ke localStorage sebagai cache
           localStorage.setItem("profileData", JSON.stringify(result.data));
         }
+      } else if (response.status === 429 && retryCount < 3) {
+        // Rate limit - retry after delay
+        const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+        console.warn(`Rate limited (429). Retrying in ${delay}ms...`);
+        setTimeout(() => fetchProfile(retryCount + 1), delay);
       } else {
         console.error("Failed to fetch profile:", response.status);
       }

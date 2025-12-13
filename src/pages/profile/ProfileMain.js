@@ -468,11 +468,7 @@ const ProfileMain = () => {
                 <label className="text-sm font-medium">Tanggal Lahir</label>
                 <input
                   type="date"
-                  value={
-                    editData.birthday
-                      ? new Date(editData.birthday).toISOString().split("T")[0]
-                      : ""
-                  }
+                  value={editData.birthday || ""}
                   onChange={(e) =>
                     setEditData({ ...editData, birthday: e.target.value })
                   }
