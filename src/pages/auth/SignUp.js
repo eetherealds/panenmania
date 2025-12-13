@@ -1,15 +1,12 @@
-// src/pages/auth/SignUp.js
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-// Gambar ilustrasi dan ikon
 import FarmerSignup from "../../assets/images/banners/petani signup.svg";
 import GoogleIcon from "../../assets/images/icons/google.svg";
 
 const SignUp = () => {
   const navigate = useNavigate();
 
-  // State data formulir
   const [formData, setFormData] = useState({
     nama: "",
     phone: "",
@@ -18,38 +15,32 @@ const SignUp = () => {
     gender: "",
   });
 
-  // State untuk error dan loading
   const [genderError, setGenderError] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  // Perubahan nilai input teks
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
-    // Clear error for this field
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
     if (apiError) setApiError("");
   };
 
-  // Validasi form
   const validateForm = () => {
     const newErrors = {};
 
-    // Validasi nama lengkap (hanya huruf, angka, dan spasi)
     if (!formData.nama || formData.nama.trim().length < 3) {
       newErrors.nama = "Nama lengkap minimal 3 karakter";
     } else if (!/^[a-zA-Z0-9 ]+$/.test(formData.nama)) {
       newErrors.nama = "Nama hanya boleh berisi huruf, angka, dan spasi";
     }
 
-    // Validasi email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email) {
       newErrors.email = "Email wajib diisi";
@@ -57,21 +48,18 @@ const SignUp = () => {
       newErrors.email = "Format email tidak valid";
     }
 
-    // Validasi password
     if (!formData.password) {
       newErrors.password = "Password wajib diisi";
     } else if (formData.password.length < 8) {
       newErrors.password = "Password minimal 8 karakter";
     }
 
-    // Validasi nomor telepon (10-20 digit)
     if (!formData.phone) {
       newErrors.phone = "Nomor telepon wajib diisi";
     } else if (!/^\d{10,20}$/.test(formData.phone)) {
       newErrors.phone = "Nomor telepon harus 10-20 digit angka";
     }
 
-    // Validasi jenis kelamin
     if (!formData.gender) {
       newErrors.gender = "Silakan pilih jenis kelamin";
       setGenderError("Silakan pilih salah satu jenis kelamin.");
@@ -81,18 +69,15 @@ const SignUp = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Pilih jenis kelamin
   const handleGenderSelect = (value) => {
     setFormData((prev) => ({ ...prev, gender: value }));
     if (genderError) setGenderError("");
   };
 
-  // Submit formulir
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError("");
 
-    // Validasi form
     if (!validateForm()) {
       return;
     }
@@ -100,7 +85,6 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      // Prepare data sesuai format API
       const requestData = {
         full_name: formData.nama,
         email: formData.email,
@@ -123,12 +107,10 @@ const SignUp = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Registrasi berhasil
         localStorage.setItem("userData", JSON.stringify(formData));
         alert("Registrasi berhasil! Silakan login.");
         navigate("/signin");
       } else {
-        // Handle error dari API
         setApiError(data.message || "Registrasi gagal. Silakan coba lagi.");
       }
     } catch (error) {
@@ -139,11 +121,9 @@ const SignUp = () => {
     }
   };
 
-  // Kelas dasar input (dikecilkan padding dan teks)
   const inputClass =
     "w-full py-1 px-4 rounded-lg bg-[#3A5A40] border border-white text-[11px] sm:text-xs md:text-sm text-white placeholder-white/60 focus:outline-none";
 
-  // Kelas tombol jenis kelamin
   const genderOptionClass = () =>
     "flex items-center gap-2 cursor-pointer text-[11px] sm:text-xs md:text-sm";
   const genderPillClass = (value) =>
@@ -159,30 +139,30 @@ const SignUp = () => {
 
   return (
     <div className="bg-[#F8F8ED] min-h-screen flex justify-center items-center font-poppins px-4">
-      {/* Kartu utama: tinggi fix di desktop, konten kanan bisa discroll jika penuh */}
+      {/* Main Container */}
       <div className="max-w-4xl w-full bg-white rounded-[32px] border-2 border-[#588157] overflow-hidden h-auto lg:h-[580px]">
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
-          {/* ============ BAGIAN KIRI ============ */}
+          {/*left*/}
           <div className="p-8 lg:p-10 flex flex-col items-center">
             <div className="flex flex-col items-center mt-2 lg:mt-4">
-              {/* Gambar ilustrasi petani */}
+              {/*farmer signup*/}
               <img
                 src={FarmerSignup}
                 alt="Petani membawa hasil panen"
                 className="rounded-[28px] mb-8 w-full max-w-[360px] h-[220px] lg:h-[240px] object-cover"
               />
-              {/* Judul sambutan */}
+              {/*title*/}
               <h2 className="text-[20px] lg:text-[22px] font-bold text-[#3A5A40] text-center">
                 Selamat Datang di PaMan!
               </h2>
-              {/* Deskripsi singkat */}
+              {/*description*/}
               <p className="text-xs sm:text-sm text-[#3A5A40] text-center mt-3 max-w-xs leading-relaxed">
                 Temukan produk pertanian segar pilihan langsung dari petani
                 terbaik.
               </p>
-              {/* Garis pemisah */}
+              {/*line*/}
               <div className="w-[70%] border-t border-[#3A5B40] mt-6" />
-              {/* Ikon Google */}
+              {/*google*/}
               <button className="mt-6">
                 <img
                   src={GoogleIcon}
@@ -193,9 +173,9 @@ const SignUp = () => {
             </div>
           </div>
 
-          {/* ============ BAGIAN KANAN (FORM) ============ */}
+          {/*form*/}
           <div className="bg-[#3A5A40] text-white p-8 lg:p-10 relative flex flex-col h-full">
-            {/* Tab Masuk / Daftar */}
+            {/*register*/}
             <div className="absolute top-6 right-8 flex gap-4 text-xs sm:text-sm font-semibold">
               <Link to="/signin" className="opacity-80 hover:opacity-100">
                 Masuk
@@ -205,18 +185,18 @@ const SignUp = () => {
               </span>
             </div>
 
-            {/* Judul form */}
+            {/*title*/}
             <h2 className="text-xl sm:text-2xl font-bold mb-3 mt-6">
               Daftar Akun
             </h2>
 
-            {/* Pembungkus form dibuat scrollable agar tidak terpotong */}
+            {/*form*/}
             <div className="flex-1 overflow-y-auto pr-1">
               <form
                 onSubmit={handleSubmit}
                 className="space-y-2.5 text-[11px] sm:text-xs md:text-sm"
               >
-                {/* Nama lengkap */}
+                {/*full name*/}
                 <div>
                   <label className="block mb-1">Nama Lengkap</label>
                   <input
@@ -234,7 +214,7 @@ const SignUp = () => {
                   )}
                 </div>
 
-                {/* Jenis kelamin */}
+                {/*gender*/}
                 <div>
                   <label className="block mb-2">Jenis Kelamin</label>
                   <div className="flex flex-wrap items-center gap-4 sm:gap-5">
@@ -267,7 +247,7 @@ const SignUp = () => {
                   )}
                 </div>
 
-                {/* No. Telepon */}
+                {/*phone*/}
                 <div>
                   <label className="block mb-1">No. Telepon</label>
                   <input
@@ -285,7 +265,7 @@ const SignUp = () => {
                   )}
                 </div>
 
-                {/* E-mail */}
+                {/*email*/}
                 <div>
                   <label className="block mb-1">E-mail</label>
                   <input
@@ -303,7 +283,7 @@ const SignUp = () => {
                   )}
                 </div>
 
-                {/* Kata sandi */}
+                {/*password*/}
                 <div>
                   <label className="block mb-1">Kata Sandi</label>
                   <input
@@ -321,20 +301,20 @@ const SignUp = () => {
                   )}
                 </div>
 
-                {/* Pesan error dari API */}
+                {/*confirm password*/}
                 {apiError && (
                   <div className="bg-red-500/20 border border-red-300 text-red-100 px-3 py-2 rounded-lg text-[10px] sm:text-xs">
                     {apiError}
                   </div>
                 )}
 
-                {/* Persetujuan ketentuan */}
+                {/*agreement*/}
                 <label className="flex items-center gap-2 text-[10px] leading-tight mt-0.5">
                   <input type="checkbox" required className="w-3 h-3" />
                   <span>Saya menyetujui ketentuan yang berlaku.</span>
                 </label>
 
-                {/* Tombol daftar */}
+                {/*submit*/}
                 <button
                   type="submit"
                   disabled={loading}

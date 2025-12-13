@@ -306,14 +306,6 @@ const ProfileMain = () => {
                       )}
                     </span>
 
-                  value={
-                    profileData.birthday
-                      ? new Date(profileData.birthday).toISOString().split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, birthday: e.target.value })
-                  }
                     <div className="bg-white rounded-[10px] px-10 py-2 min-w-[150px] text-center">
                       Laki-Laki
                     </div>
@@ -326,6 +318,14 @@ const ProfileMain = () => {
                 <label className="text-sm font-medium">Tanggal Lahir</label>
                 <input
                   type="date"
+                  value={
+                    profileData.birthday
+                      ? new Date(profileData.birthday).toISOString().split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setProfileData({ ...profileData, birthday: e.target.value })
+                  }
                   className="w-full bg-white py-3 px-4 rounded-[10px] mt-1 outline-none text-sm"
                 />
               </div>
