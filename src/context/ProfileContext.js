@@ -17,9 +17,14 @@ export const ProfileProvider = ({ children }) => {
   const fetchProfile = useCallback(async (retryCount = 0) => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        console.log("No token found in localStorage");
+        return;
+      }
 
       setLoading(true);
+      console.log("Fetching profile with token:", token.substring(0, 20) + "...");
+      
       const response = await fetch(
         "https://pa-man-api.vercel.app/api/user/my-profile",
         {
@@ -43,7 +48,8 @@ export const ProfileProvider = ({ children }) => {
         console.warn(`Rate limited (429). Retrying in ${delay}ms...`);
         setTimeout(() => fetchProfile(retryCount + 1), delay);
       } else {
-        console.error("Failed to fetch profile:", response.status);
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Failed to fetch profile:", response.status, errorData);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);

@@ -1,6 +1,7 @@
 // src/pages/afterLogin/ProfileMain.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 import ProfileSideBar from "../../components/layout/ProfileSideBar";
@@ -11,21 +12,13 @@ import ProfilePhoto from "../../assets/images/icons/pp.svg";
 const ProfileMain = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { profileData, setProfileData, loading, fetchProfile } = useContext(ProfileContext);
 
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [profilePic, setProfilePic] = useState(null);
-  const [gender, setGender] = useState("");
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profileData, setProfileData] = useState({
-    full_name: "",
-    email: "",
-    phone_number: "",
-    gender: "",
-    birthday: "",
-    avatar_url: "",
-  });
+  
   // State terpisah untuk form editing (tidak langsung update profileData)
   const [editData, setEditData] = useState({
     full_name: "",
@@ -36,64 +29,25 @@ const ProfileMain = () => {
   });
   const [editGender, setEditGender] = useState("");
 
-  // Fetch profile data from API
+  // Sync editData with profileData when data loads
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/signin");
-          return;
-        }
-
-        const response = await fetch(
-          "https://pa-man-api.vercel.app/api/user/my-profile",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.status === "Success" && result.data) {
-            setProfileData(result.data);
-            // Initialize editData dengan data dari API
-            // Convert ISO date to YYYY-MM-DD format if needed
-            const birthdayValue = result.data.birthday 
-              ? result.data.birthday.split('T')[0] 
-              : "";
-            setEditData({
-              full_name: result.data.full_name,
-              email: result.data.email,
-              phone_number: result.data.phone_number,
-              gender: result.data.gender,
-              birthday: birthdayValue,
-            });
-            setGender(result.data.gender);
-            setEditGender(result.data.gender);
-            if (result.data.avatar_url) {
-              setProfilePic(result.data.avatar_url);
-            }
-          }
-        } else {
-          // Token might be invalid
-          if (response.status === 401) {
-            localStorage.removeItem("token");
-            navigate("/signin");
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
+    if (profileData && profileData.full_name) {
+      const birthdayValue = profileData.birthday 
+        ? profileData.birthday.split('T')[0] 
+        : "";
+      setEditData({
+        full_name: profileData.full_name,
+        email: profileData.email,
+        phone_number: profileData.phone_number,
+        gender: profileData.gender,
+        birthday: birthdayValue,
+      });
+      setEditGender(profileData.gender);
+      if (profileData.avatar_url) {
+        setProfilePic(profileData.avatar_url);
       }
-    };
-
-    fetchProfile();
-  }, [navigate]);
+    }
+  }, [profileData]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -169,7 +123,6 @@ const ProfileMain = () => {
             gender: result.data[0].gender,
             birthday: birthdayValue,
           });
-          setGender(result.data[0].gender);
           setEditGender(result.data[0].gender);
           setShowSuccessPopup(true);
         }
