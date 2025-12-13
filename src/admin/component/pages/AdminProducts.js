@@ -81,7 +81,11 @@ const AdminProducts = () => {
 
         // Handle the response structure
         if (result.data) {
-          if (Array.isArray(result.data)) {
+          if (result.data.results && Array.isArray(result.data.results)) {
+            // Products are in results array
+            productsArray = result.data.results;
+            setTotalProducts(result.data.total || result.data.results.length);
+          } else if (Array.isArray(result.data)) {
             // If data is already an array
             productsArray = result.data;
             setTotalProducts(result.data.length);
@@ -89,18 +93,6 @@ const AdminProducts = () => {
             // If products are nested in data.products
             productsArray = result.data.products;
             setTotalProducts(result.data.products.length);
-          } else if (result.data.items && Array.isArray(result.data.items)) {
-            // If products are in data.items
-            productsArray = result.data.items;
-            setTotalProducts(result.data.items.length);
-          } else {
-            // If result.data is an object, try to convert to array
-            console.log("Data structure:", result.data);
-            if (typeof result.data === 'object' && Object.keys(result.data).length > 0) {
-              // Try to get values as array
-              productsArray = Object.values(result.data).filter(item => item && typeof item === 'object');
-              setTotalProducts(productsArray.length);
-            }
           }
         }
         console.log("Products Array:", productsArray);
