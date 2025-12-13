@@ -20,6 +20,7 @@ const ProfileMain = () => {
   const [profilePic, setProfilePic] = useState(null);
   const [gender, setGender] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [profileData, setProfileData] = useState({
     full_name: "",
     email: "",
@@ -28,6 +29,15 @@ const ProfileMain = () => {
     birthday: "",
     avatar_url: "",
   });
+  // State terpisah untuk form editing (tidak langsung update profileData)
+  const [editData, setEditData] = useState({
+    full_name: "",
+    email: "",
+    phone_number: "",
+    gender: "",
+    birthday: "",
+  });
+  const [editGender, setEditGender] = useState("");
 
   // Fetch profile data from API
   useEffect(() => {
@@ -53,7 +63,16 @@ const ProfileMain = () => {
           const result = await response.json();
           if (result.status === "Success" && result.data) {
             setProfileData(result.data);
+            // Initialize editData dengan data dari API
+            setEditData({
+              full_name: result.data.full_name,
+              email: result.data.email,
+              phone_number: result.data.phone_number,
+              gender: result.data.gender,
+              birthday: result.data.birthday,
+            });
             setGender(result.data.gender);
+            setEditGender(result.data.gender);
             if (result.data.avatar_url) {
               setProfilePic(result.data.avatar_url);
             }
@@ -77,6 +96,7 @@ const ProfileMain = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSaving(true);
     
     try {
       const token = localStorage.getItem("token");
@@ -87,11 +107,11 @@ const ProfileMain = () => {
 
       // Prepare data untuk API
       const updateData = {
-        full_name: profileData.full_name,
-        email: profileData.email,
-        phone_number: profileData.phone_number,
-        gender: gender,
-        birthday: profileData.birthday,
+        full_name: editData.full_name,
+        email: editData.email,
+        phone_number: editData.phone_number,
+        gender: editGender,
+        birthday: editData.birthday,
       };
 
       const response = await fetch(
@@ -109,9 +129,17 @@ const ProfileMain = () => {
       if (response.ok) {
         const result = await response.json();
         if (result.status === "Success") {
-          // Update state dengan data terbaru
+          // Update profileData hanya SETELAH berhasil
           setProfileData(result.data[0]);
+          setEditData({
+            full_name: result.data[0].full_name,
+            email: result.data[0].email,
+            phone_number: result.data[0].phone_number,
+            gender: result.data[0].gender,
+            birthday: result.data[0].birthday,
+          });
           setGender(result.data[0].gender);
+          setEditGender(result.data[0].gender);
           setShowSuccessPopup(true);
         }
       } else {
@@ -121,6 +149,8 @@ const ProfileMain = () => {
     } catch (error) {
       console.error("Error updating profile:", error);
       alert("Terjadi kesalahan saat menyimpan");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -324,9 +354,9 @@ const ProfileMain = () => {
                 <label className="text-sm font-medium">Nama Lengkap</label>
                 <input
                   type="text"
-                  value={profileData.full_name}
+                  value={editData.full_name}
                   onChange={(e) =>
-                    setProfileData({ ...profileData, full_name: e.target.value })
+                    setEditData({ ...editData, full_name: e.target.value })
                   }
                   className="w-full bg-white py-3 px-4 rounded-[10px] mt-1 outline-none text-sm"
                 />
@@ -337,9 +367,9 @@ const ProfileMain = () => {
                 <label className="text-sm font-medium">Email</label>
                 <input
                   type="email"
-                  value={profileData.email}
+                  value={editData.email}
                   onChange={(e) =>
-                    setProfileData({ ...profileData, email: e.target.value })
+                    setEditData({ ...editData, email: e.target.value })
                   }
                   className="w-full bg-white py-3 px-4 rounded-[10px] mt-1 outline-none text-sm"
                 />
@@ -350,9 +380,9 @@ const ProfileMain = () => {
                 <label className="text-sm font-medium">No. Telepon</label>
                 <input
                   type="text"
-                  value={profileData.phone_number}
+                  value={editData.phone_number}
                   onChange={(e) =>
-                    setProfileData({ ...profileData, phone_number: e.target.value })
+                    setEditData({ ...editData, phone_number: e.target.value })
                   }
                   className="w-full bg-white py-3 px-4 rounded-[10px] mt-1 outline-none text-sm"
                 />
@@ -368,19 +398,18 @@ const ProfileMain = () => {
                   {/* Perempuan */}
                   <div
                     onClick={() => {
-                      setGender("Perempuan");
-                      setProfileData({ ...profileData, gender: "Perempuan" });
+                      setEditGender("Perempuan");
                     }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
                     <span
                       className={`w-5 h-5 rounded-full border-2 border-[#3A5B40] flex items-center justify-center ${
-                        gender === "Perempuan"
+                        editGender === "Perempuan"
                           ? "bg-[#3A5B40]/10"
                           : "bg-transparent"
                       }`}
                     >
-                      {gender === "Perempuan" && (
+                      {editGender === "Perempuan" && (
                         <span className="w-2.5 h-2.5 rounded-full bg-[#3A5B40]" />
                       )}
                     </span>
@@ -393,19 +422,18 @@ const ProfileMain = () => {
                   {/* Laki-Laki */}
                   <div
                     onClick={() => {
-                      setGender("Laki");
-                      setProfileData({ ...profileData, gender: "Laki" });
+                      setEditGender("Laki");
                     }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
                     <span
                       className={`w-5 h-5 rounded-full border-2 border-[#3A5B40] flex items-center justify-center ${
-                        gender === "Laki"
+                        editGender === "Laki"
                           ? "bg-[#3A5B40]/10"
                           : "bg-transparent"
                       }`}
                     >
-                      {gender === "Laki" && (
+                      {editGender === "Laki" && (
                         <span className="w-2.5 h-2.5 rounded-full bg-[#3A5B40]" />
                       )}
                     </span>
@@ -423,12 +451,12 @@ const ProfileMain = () => {
                 <input
                   type="date"
                   value={
-                    profileData.birthday
-                      ? new Date(profileData.birthday).toISOString().split("T")[0]
+                    editData.birthday
+                      ? new Date(editData.birthday).toISOString().split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
-                    setProfileData({ ...profileData, birthday: e.target.value })
+                    setEditData({ ...editData, birthday: e.target.value })
                   }
                   className="w-full bg-white py-3 px-4 rounded-[10px] mt-1 outline-none text-sm"
                 />
@@ -437,9 +465,10 @@ const ProfileMain = () => {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="bg-[#344E41] text-white font-semibold px-8 py-2 rounded-[10px] hover:bg-[#2a3e33] transition"
+                  disabled={saving}
+                  className="bg-[#344E41] text-white font-semibold px-8 py-2 rounded-[10px] hover:bg-[#2a3e33] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Simpan
+                  {saving ? "Menyimpan..." : "Simpan"}
                 </button>
               </div>
             </form>
