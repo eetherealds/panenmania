@@ -113,18 +113,21 @@ const ProductDetailBeforeLogin = () => {
           throw new Error('Produk tidak ditemukan');
         }
         const result = await response.json();
-        // Handle response structure - data might be in result.data or result directly
-        const data = result.data || result;
+        // Handle response structure: result.data.product
+        const productData = result.data?.product || result.data || result;
+        const reviewsData = result.data?.product?.product_review || [];
+        
         setProduct({
-          id: data.id,
-          name: data.name,
-          price: data.price,
-          description: data.description,
-          image: data.photo_url || BerasImage,
-          stock: data.stock || 0,
-          rating: data.rating || 5.0,
-          reviewCount: data.review_count || 0,
-          soldCount: data.sold_count || 0,
+          id: id,
+          name: productData.name,
+          price: productData.price,
+          discountedPrice: productData.discounted_price,
+          description: productData.description,
+          image: productData.photo_url || BerasImage,
+          stock: productData.stock || 0,
+          rating: parseFloat(productData.average_rating) || 0,
+          reviewCount: productData.total_reviews || 0,
+          reviews: reviewsData,
         });
       } catch (err) {
         console.error('Error fetching product:', err);
@@ -214,22 +217,31 @@ const ProductDetailBeforeLogin = () => {
 
                 {/* Rating dan info singkat */}
                 <div className="flex flex-wrap items-center gap-3 text-[#3A5B40] text-[14px] font-medium mb-4">
-                  <span>{product.rating?.toFixed(1) || "5.0"}</span>
+                  <span>{product.rating?.toFixed(1) || "0.0"}</span>
                   <span className="text-[16px] leading-none text-[#3A5B40]">
-                    {"★".repeat(Math.round(product.rating || 5))}{"☆".repeat(5 - Math.round(product.rating || 5))}
+                    {"★".repeat(Math.round(product.rating || 0))}{"☆".repeat(5 - Math.round(product.rating || 0))}
                   </span>
                   <span>|</span>
                   <span>{product.reviewCount || 0} Ulasan</span>
-                  <span>|</span>
-                  <span>{product.soldCount || 0} Terjual</span>
                 </div>
 
                 {/* Harga utama */}
                 <div className="inline-block mb-6">
                   <div className="bg-[#3A5B40] rounded-[10px] px-5 py-3">
-                    <p className="text-[20px] sm:text-[22px] font-extrabold text-white">
-                      Rp {product.price?.toLocaleString("id-ID") || "0"}
-                    </p>
+                    {product.discountedPrice ? (
+                      <div className="flex flex-col">
+                        <p className="text-[14px] text-gray-300 line-through">
+                          Rp {product.price?.toLocaleString("id-ID") || "0"}
+                        </p>
+                        <p className="text-[20px] sm:text-[22px] font-extrabold text-white">
+                          Rp {product.discountedPrice?.toLocaleString("id-ID") || "0"}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-[20px] sm:text-[22px] font-extrabold text-white">
+                        Rp {product.price?.toLocaleString("id-ID") || "0"}
+                      </p>
+                    )}
                   </div>
                 </div>
 
