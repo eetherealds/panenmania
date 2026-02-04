@@ -247,7 +247,8 @@ const AdminAddProduct = () => {
 
   // MODE EDIT / ADD
   const [isEditMode] = useState(!!editingProduct);
-  const [productId] = useState(editingProduct?.id ?? null);
+  // eslint-disable-next-line no-unused-vars
+  const [_productId] = useState(editingProduct?.id ?? null);
 
   // STATE FORM (prefill jika edit)
   const [form, setForm] = useState(() => {
@@ -372,7 +373,8 @@ const AdminAddProduct = () => {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        // eslint-disable-next-line no-unused-vars
+        const _result = await response.json();
         alert("Produk berhasil ditambahkan!");
         navigate("/admin/products");
       } else {

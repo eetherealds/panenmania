@@ -18,7 +18,8 @@ const CATEGORY_OPTIONS = [
 ];
 
 // Dummy data produk (kategori disimpan dengan huruf awal besar, nanti dinormalisasi)
-const PRODUCTS = [
+// eslint-disable-next-line no-unused-vars
+const _PRODUCTS = [
   {
     name: "Semangka Merah Manis",
     description: "Buah segar langsung dari kebun petani lokal.",
@@ -107,7 +108,8 @@ const PRODUCTS = [
 
 function CatalogBeforeLogin() {
   const location = useLocation();
-  const { products: allProducts, loading: loadingProducts } = useContext(ProductsContext);
+  // eslint-disable-next-line no-unused-vars
+  const { products: allProducts, loading: _loadingProducts } = useContext(ProductsContext);
 
   // Disimpan dalam format: all | buah | sayur | beras
   const [selectedCategory, setSelectedCategory] = useState("all");

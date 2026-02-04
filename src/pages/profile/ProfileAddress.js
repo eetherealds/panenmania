@@ -5,7 +5,6 @@ import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 import AddressModal from "./AddressModal";
-import ProfileSideBar from "../../components/layout/ProfileSideBar";
 
 // ICONS & IMAGES (samakan dengan ProfileMain)
 import EditIcon from "../../assets/images/icons/edit.svg";
@@ -142,7 +141,8 @@ const ProfileAddress = () => {
   };
 
   // set alamat utama
-  const setPrimary = (id) => {
+  // eslint-disable-next-line no-unused-vars
+  const _setPrimary = (id) => {
     setAddresses((prev) =>
       prev.map((a) => ({ ...a, isPrimary: a.id === id }))
     );

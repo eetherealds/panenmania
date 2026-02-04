@@ -1,6 +1,6 @@
 // src/pages/afterLogin/OrderHistory.js
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import ProfileSideBar from "../../components/layout/ProfileSideBar";
@@ -12,7 +12,8 @@ const OrderHistory = () => {
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   // State foto profil sementara (preview)
-  const [profilePic, setProfilePic] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const [_profilePic, setProfilePic] = useState(null);
 
   // Handler unggah foto profil (preview lokal)
   const handleUploadPic = (e) => {

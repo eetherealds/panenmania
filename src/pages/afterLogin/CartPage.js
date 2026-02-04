@@ -96,7 +96,8 @@ const CartPage = () => {
   };
 
   // Tambah qty
-  const increaseQty = (id) => {
+  // eslint-disable-next-line no-unused-vars
+  const _increaseQty = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, qty: item.qty + 1 } : item
@@ -105,7 +106,8 @@ const CartPage = () => {
   };
 
   // Kurangi qty
-  const decreaseQty = (id) => {
+  // eslint-disable-next-line no-unused-vars
+  const _decreaseQty = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
         item.id === id && item.qty > 1

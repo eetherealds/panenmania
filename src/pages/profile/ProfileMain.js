@@ -7,13 +7,11 @@ import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 import ProfileSideBar from "../../components/layout/ProfileSideBar";
 
-// ICONS & IMAGES
-import ProfilePhoto from "../../assets/images/icons/pp.svg";
-
 const ProfileMain = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profileData, setProfileData, loading, fetchProfile, logout } = useContext(ProfileContext);
+  // eslint-disable-next-line no-unused-vars
+  const { profileData, setProfileData, loading, fetchProfile: _fetchProfile, logout } = useContext(ProfileContext);
   const { products: allProducts, loading: loadingProducts } = useContext(ProductsContext);
 
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -156,7 +154,8 @@ const ProfileMain = () => {
     }
   };
 
-  const isActive = (path) => location.pathname === path;
+  // eslint-disable-next-line no-unused-vars
+  const _isActive = (path) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-[#FFFEF6] text-[#344E41] font-poppins flex flex-col">

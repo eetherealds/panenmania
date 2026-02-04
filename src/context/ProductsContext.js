@@ -75,6 +75,7 @@ export const ProductsProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products, lastFetchTime]);
 
   // Fetch products on mount
@@ -82,6 +83,7 @@ export const ProductsProvider = ({ children }) => {
     if (products.length === 0) {
       fetchProducts(1, 30);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

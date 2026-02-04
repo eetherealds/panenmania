@@ -1,8 +1,9 @@
 // src/admin/component/pages/AdminProducts.js
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-const initialProducts = [
+// eslint-disable-next-line no-unused-vars
+const _initialProducts = [
   {
     id: 1,
     name: "Beras Rojo Lele 5 Kg",
@@ -42,14 +43,18 @@ const AdminProducts = () => {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [currentSort, setCurrentSort] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
+  // eslint-disable-next-line no-unused-vars
+  const [_loadingProducts, setLoadingProducts] = useState(true);
+  // eslint-disable-next-line no-unused-vars
+  const [_currentSort, _setCurrentSort] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const [_currentPage, setCurrentPage] = useState(1);
+  // eslint-disable-next-line no-unused-vars
+  const [_totalProducts, setTotalProducts] = useState(0);
   const [pageSize] = useState(10);
 
   // Fetch products based on sort
-  const fetchProductsBySort = async (sortValue = null, page = 1) => {
+  const fetchProductsBySort = useCallback(async (sortValue = null, page = 1) => {
     try {
       setLoadingProducts(true);
       const token = localStorage.getItem("adminToken");
@@ -119,17 +124,18 @@ const AdminProducts = () => {
     } finally {
       setLoadingProducts(false);
     }
-  };
+  }, [pageSize]);
 
   // Initial fetch - all products
   useEffect(() => {
     fetchProductsBySort(null, 1);
-  }, []);
+  }, [fetchProductsBySort]);
 
   // dropdown filter
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortLabel, setSortLabel] = useState("Urutkan Berdasarkan");
-  const [filterCategory, setFilterCategory] = useState("Semua Kategori");
+  // eslint-disable-next-line no-unused-vars
+  const [_filterCategory, setFilterCategory] = useState("Semua Kategori");
 
   // checkbox select
   const [selectedProducts, setSelectedProducts] = useState([]);

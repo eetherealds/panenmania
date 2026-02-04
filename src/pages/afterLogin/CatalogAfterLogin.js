@@ -16,7 +16,8 @@ const CATEGORY_OPTIONS = [
   { label: "Beras", value: "beras" },
 ];
 
-const PRODUCTS = [
+// eslint-disable-next-line no-unused-vars
+const _PRODUCTS = [
   {
     name: "Semangka Merah Manis",
     description: "Buah segar langsung dari kebun petani lokal.",
@@ -105,7 +106,8 @@ const PRODUCTS = [
 
 function CatalogAfterLogin() {
   const location = useLocation();
-  const { products: allProducts, loading: loadingProducts } = useContext(ProductsContext);
+  // eslint-disable-next-line no-unused-vars
+  const { products: allProducts, loading: _loadingProducts } = useContext(ProductsContext);
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
