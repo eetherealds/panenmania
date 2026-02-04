@@ -12,15 +12,12 @@ import TrashIcon from "../../assets/images/icons/trash.svg";
 import PencilIcon from "../../assets/images/icons/pensil.svg";
 
 const ProfileAddress = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { profileData, loading } = useContext(ProfileContext);
-  const { logout } = useContext(ProfileContext);
+  const { profileData, loading, logout } = useContext(ProfileContext);
 
   const [addresses, setAddresses] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
-  const [profilePic, setProfilePic] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
@@ -75,11 +72,6 @@ const ProfileAddress = () => {
     fetchAddresses();
   }, [navigate]);
 
-  // upload foto profil
-  const handleUploadPic = (e) => {
-    const file = e.target.files[0];
-    if (file) setProfilePic(URL.createObjectURL(file));
-  };
   const openAdd = () => {
     setEditing(null);
     setShowModal(true);
@@ -222,127 +214,18 @@ const ProfileAddress = () => {
     }
   };
 
-  const isActive = (path) => location.pathname === path;
-
   return (
     <div className="min-h-screen bg-[#FFFEF6] text-[#344E41] font-poppins flex flex-col">
       <NavbarAfterLogin />
 
       {/* MAIN CONTENT – sama layout dengan ProfileMain */}
       <div className="flex w-full mt-14 gap-8">
-        {/* SIDEBAR – copy dari ProfileMain */}
-        <div className="w-72 bg-white px-6 py-8 rounded-[10px] shadow flex flex-col overflow-y-auto min-h-[calc(100vh-56px)]">
-          <div className="flex flex-col items-center text-center">
-            <label className="relative cursor-pointer inline-block">
-              <input type="file" className="hidden" onChange={handleUploadPic} />
-              <div className="w-40 h-40 bg-[#F2F2F2] rounded-full flex items-center justify-center overflow-hidden">
-                <img
-                  src={profilePic || ProfilePhoto}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.12)] flex items-center justify-center">
-                <img src={EditIcon} alt="Edit" className="w-4 h-4" />
-              </div>
-            </label>
-
-            <p className="mt-3 font-semibold text-lg">
-              {loading ? "Loading..." : profileData.full_name || "User"}
-            </p>
-            {profileData.email && (
-              <p className="text-sm text-gray-600">{profileData.email}</p>
-            )}
-          </div>
-
-          {/* MENU – sama persis ProfileMain */}
-          <div className="mt-8 space-y-6 text-left w-full">
-            {/* PROFILE SECTION */}
-            <div>
-              <div className="flex items-center gap-2">
-                <img src={ProfileIcon} alt="Profile icon" className="w-5 h-5" />
-                <Link to="/profile">
-                  <p
-                    className={`text-sm cursor-pointer ${
-                      isActive("/profile")
-                        ? "font-semibold text-[#344E41]"
-                        : "text-gray-600 hover:text-[#344E41]"
-                    }`}
-                  >
-                    Profile
-                  </p>
-                </Link>
-              </div>
-
-              <div className="ml-7 mt-1 space-y-1">
-                <Link to="/profile/address">
-                  <p
-                    className={`text-sm cursor-pointer ${
-                      isActive("/profile/address")
-                        ? "font-semibold text-[#344E41]"
-                        : "text-gray-600 hover:text-[#344E41]"
-                    }`}
-                  >
-                    Alamat
-                  </p>
-                </Link>
-
-                <Link to="/profile/password">
-                  <p
-                    className={`text-sm cursor-pointer ${
-                      isActive("/profile/password")
-                        ? "font-semibold text-[#344E41]"
-                        : "text-gray-600 hover:text-[#344E41]"
-                    }`}
-                  >
-                    Kata Sandi
-                  </p>
-                </Link>
-              </div>
-            </div>
-
-            {/* ORDERS SECTION */}
-            <div>
-              <div className="flex items-center gap-2">
-                <img src={CheckIcon} alt="Orders icon" className="w-5 h-5" />
-                <Link to="/orders-status">
-                  <p
-                    className={`text-sm cursor-pointer ${
-                      isActive("/orders-status")
-                        ? "font-semibold text-[#344E41]"
-                        : "text-gray-600 hover:text-[#344E41]"
-                    }`}
-                  >
-                    Status Pesanan
-                  </p>
-                </Link>
-              </div>
-
-              <div className="ml-7 mt-1 space-y-1">
-                <Link to="/orders-history">
-                  <p
-                    className={`text-sm cursor-pointer ${
-                      isActive("/orders-history")
-                        ? "font-semibold text-[#344E41]"
-                        : "text-gray-600 hover:text-[#344E41]"
-                    }`}
-                  >
-                    Riwayat Pesanan
-                  </p>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* BUTTON KELUAR – sama dengan ProfileMain */}
-          <button
-            onClick={handleLogout}
-            className="mt-20 self-center flex items-center justify-center gap-2 bg-[#3A5B40] px-8 py-2 rounded-[10px] text-sm font-semibold text-white hover:bg-[#314c35] transition"
-          >
-            <img src={OutIcon} alt="Keluar" className="w-4 h-4" />
-            Keluar
-          </button>
-        </div>
+        {/* SIDEBAR – pakai komponen ProfileSideBar */}
+        <ProfileSideBar
+          profileData={profileData}
+          loading={loading}
+          onLogout={handleLogout}
+        />
 
         {/* CARD ALAMAT */}
         <div className="flex-1 mr-6 lg:mr-20 flex">
