@@ -44,6 +44,13 @@ const VARIANT_CONFIG = {
     confirmText: "Tutup",
     cancelText: null,
   },
+  contact_success: {
+    icon: IconSave,
+    title: "Terima Kasih Telah Menghubungi Kami!",
+    message: "Pesan Anda telah kami terima dan akan segera kami balas 🙌",
+    confirmText: "Kembali",
+    cancelText: null,
+  },
 };
 
 const Popup = ({
@@ -77,7 +84,7 @@ const Popup = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Tombol close khusus success */}
-        {variant === "success" && onClose && (
+        {(variant === "success" || variant === "contact_success") && onClose && (
           <button
             type="button"
             onClick={onClose}
@@ -103,7 +110,7 @@ const Popup = ({
                       : variant === "logout"
                       ? // hijau gelap
                         "invert(34%) sepia(16%) saturate(1030%) hue-rotate(82deg) brightness(92%) contrast(88%)"
-                      : // SUCCESS = warna asli hijau (NO FILTER)
+                      : // SUCCESS & CONTACT_SUCCESS = warna asli hijau (NO FILTER)
                         "none",
                 }}
               />

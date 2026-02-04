@@ -74,23 +74,11 @@ const ContactAfterLogin = () => {
       <Footer />
 
       {showPopup && (
-        <Popup onClose={closePopup}>
-          <div className="text-center px-4 py-6 font-poppins">
-            <h3 className="text-lg font-bold mb-3 text-[#344E41]">
-              Terima Kasih Telah Menghubungi Kami!
-            </h3>
-            <p className="text-sm text-gray-700 mb-6 leading-relaxed">
-              Pesan Anda telah kami terima dan akan segera kami balas 🙌
-            </p>
-
-            <button
-              onClick={closePopup}
-              className="bg-[#344E41] text-white px-6 py-2 rounded-lg hover:bg-[#2d3e36] transition"
-            >
-              Kembali
-            </button>
-          </div>
-        </Popup>
+        <Popup
+          variant="contact_success"
+          onClose={closePopup}
+          onConfirm={closePopup}
+        />
       )}
     </div>
   );
