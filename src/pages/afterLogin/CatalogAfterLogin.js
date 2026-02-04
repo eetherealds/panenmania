@@ -256,8 +256,8 @@ function CatalogAfterLogin() {
       <section className="w-full bg-[#F8FAF7] pb-14 md:pb-16">
         <div className="max-w-[1380px] mx-auto px-6 lg:px-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-10 md:gap-y-12 gap-x-6 md:gap-x-8">
-            {filteredProducts.map((product, index) => (
-              <Link key={index} to={`/product/${index}`}>
+            {filteredProducts.map((product) => (
+              <Link key={product.id} to={`/product/${product.id}`}>
                 <div className="bg-white rounded-3xl shadow-[0_4px_10px_rgba(0,0,0,0.08)] border border-[#E0E6D8] hover:shadow-xl transition-all duration-200 cursor-pointer w-full max-w-[310px] mx-auto">
                   <div className="w-full bg-[#F4F8F1] rounded-t-3xl p-6 h-[190px] sm:h-[200px] flex items-center justify-center">
                     <img
