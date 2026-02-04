@@ -1,17 +1,13 @@
 // src/pages/afterLogin/ProfileAddress.js
 import React, { useState, useEffect, useContext } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ProfileContext } from "../../context/ProfileContext";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Popup from "../../components/common/Popup";
 import AddressModal from "./AddressModal";
+import ProfileSideBar from "../../components/layout/ProfileSideBar";
 
-// ICONS & IMAGES (samakan dengan ProfileMain)
-import EditIcon from "../../assets/images/icons/edit.svg";
-import ProfileIcon from "../../assets/images/icons/profile.svg";
-import CheckIcon from "../../assets/images/icons/ceklis.svg";
-import OutIcon from "../../assets/images/icons/out.svg";
-import ProfilePhoto from "../../assets/images/icons/pp.svg";
+// ICONS & IMAGES
 import TrashIcon from "../../assets/images/icons/trash.svg";
 import PencilIcon from "../../assets/images/icons/pensil.svg";
 
