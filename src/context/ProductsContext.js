@@ -9,7 +9,7 @@ export const ProductsProvider = ({ children }) => {
   const [lastFetchTime, setLastFetchTime] = useState(0);
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
 
-  const fetchProducts = useCallback(async (page = 1, limit = 100, forceRefresh = false) => {
+  const fetchProducts = useCallback(async (page = 1, limit = 30, forceRefresh = false) => {
     // Check if we have fresh cached data
     const now = Date.now();
     if (!forceRefresh && lastFetchTime && now - lastFetchTime < CACHE_DURATION && products.length > 0) {
@@ -80,7 +80,7 @@ export const ProductsProvider = ({ children }) => {
   // Fetch products on mount
   useEffect(() => {
     if (products.length === 0) {
-      fetchProducts(1, 100);
+      fetchProducts(1, 30);
     }
   }, []);
 
