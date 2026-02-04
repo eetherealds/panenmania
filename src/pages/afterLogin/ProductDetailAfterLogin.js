@@ -105,17 +105,23 @@ const ProductDetailAfterLogin = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`/api/products/${id}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`https://pa-man-api.vercel.app/api/products/${id}`, {
+          method: "GET",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         if (!response.ok) {
           throw new Error('Produk tidak ditemukan');
         }
-        const data = await response.json();
+        const result = await response.json();
+        // Handle response structure - data might be in result.data or result directly
+        const data = result.data || result;
         setProduct({
           id: data.id,
           name: data.name,
           price: data.price,
           description: data.description,
-          image: data.image || BerasImage,
+          image: data.photo_url || BerasImage,
           stock: data.stock || 0,
           rating: data.rating || 5.0,
           reviewCount: data.review_count || 0,
