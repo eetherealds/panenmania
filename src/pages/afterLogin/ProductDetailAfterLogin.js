@@ -1,8 +1,8 @@
 // src/pages/afterLogin/ProductDetailAfterLogin.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavbarAfterLogin from "../../components/layout/NavbarAfterLogin";
 import Footer from "../../components/layout/Footer";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // ICONS
 import IconTruk from "../../assets/images/icons/truk.svg";
@@ -91,17 +91,48 @@ const ReviewItem = ({ name, rating, text }) => (
 /* ---------- Main component ---------- */
 
 const ProductDetailAfterLogin = () => {
+  const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Data produk sementara
-  const product = {
-    id: 1,
-    name: "Beras Pulen Berkualitas Cap Dero 5kg",
-    price: 79500,
-    image: BerasImage,
-  };
+  // Fetch product data from API
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`/api/products/${id}`);
+        if (!response.ok) {
+          throw new Error('Produk tidak ditemukan');
+        }
+        const data = await response.json();
+        setProduct({
+          id: data.id,
+          name: data.name,
+          price: data.price,
+          description: data.description,
+          image: data.image || BerasImage,
+          stock: data.stock || 0,
+          rating: data.rating || 5.0,
+          reviewCount: data.review_count || 0,
+          soldCount: data.sold_count || 0,
+        });
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
 
   // Tambah ke keranjang (logika backend bisa disesuaikan)
   const handleAddToCart = async () => {
@@ -141,6 +172,29 @@ const ProductDetailAfterLogin = () => {
       {/* Spacer agar konten tidak tertutup navbar */}
       <div className="pt-24" />
 
+      {/* Loading state */}
+      {loading && (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500 text-lg">Memuat produk...</p>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && !loading && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="text-red-500 text-lg">{error}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-2 bg-[#3A5B40] text-white rounded-lg hover:bg-[#2c3d33]"
+          >
+            Kembali
+          </button>
+        </div>
+      )}
+
+      {/* Product detail - only show when product is loaded */}
+      {!loading && !error && product && (
+        <>
       {/* ========== DETAIL PRODUK ========== */}
       <section className="w-full mt-0">
         <div className="max-w-[1350px] mx-auto">
@@ -181,34 +235,28 @@ const ProductDetailAfterLogin = () => {
 
                 {/* Rating dan info singkat */}
                 <div className="flex flex-wrap items-center gap-3 text-[#3A5B40] text-[14px] font-medium mb-4">
-                  <span>5.0</span>
+                  <span>{product.rating?.toFixed(1) || "5.0"}</span>
                   <span className="text-[16px] leading-none text-[#3A5B40]">
-                    ★★★★★
+                    {"★".repeat(Math.round(product.rating || 5))}{"☆".repeat(5 - Math.round(product.rating || 5))}
                   </span>
                   <span>|</span>
-                  <span>4 Ulasan</span>
+                  <span>{product.reviewCount || 0} Ulasan</span>
                   <span>|</span>
-                  <span>50 Terjual</span>
+                  <span>{product.soldCount || 0} Terjual</span>
                 </div>
 
                 {/* Harga utama */}
                 <div className="inline-block mb-6">
                   <div className="bg-[#3A5B40] rounded-[10px] px-5 py-3">
                     <p className="text-[20px] sm:text-[22px] font-extrabold text-white">
-                      Rp {product.price.toLocaleString("id-ID")}
+                      Rp {product.price?.toLocaleString("id-ID") || "0"}
                     </p>
                   </div>
                 </div>
 
                 {/* Deskripsi produk */}
                 <p className="text-[#3A5B40] text-[14px] sm:text-[13px] leading-relaxed mb-6 max-w-[515px]">
-                  Beras yang diproses dengan baik sehingga menghasilkan beras
-                  premium yang sangat pulen dan sehat.
-                  <br />
-                  Beras ini sangat bersih dan tidak menggunakan bahan kimia
-                  berbahaya
-                  <br />
-                  sehingga aman digunakan untuk kebutuhan pokok keluarga Anda.
+                  {product.description || "Deskripsi produk tidak tersedia."}
                 </p>
 
                 {/* Info pengiriman, stok, dan qty */}
@@ -224,7 +272,7 @@ const ProductDetailAfterLogin = () => {
                       <span>5–7 Hari</span>
                     </div>
                     <span>|</span>
-                    <span>Tersisa: 20 barang</span>
+                    <span>Tersisa: {product.stock || 0} barang</span>
                   </div>
 
                   <div className="lg:-ml-0">
@@ -352,6 +400,8 @@ const ProductDetailAfterLogin = () => {
           </div>
         </div>
       </section>
+      </>
+      )}
 
       <Footer />
     </div>

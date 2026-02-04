@@ -1,9 +1,9 @@
 // src/pages/beforeLogin/ProductDetailBeforeLogin.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavbarBeforeLogin from "../../components/layout/NavbarBeforeLogin";
 import Footer from "../../components/layout/Footer";
 import Popup from "../../components/common/Popup";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // ICONS
 import IconTruk from "../../assets/images/icons/truk.svg";
@@ -15,6 +15,7 @@ import IconMelakukanPembayaran from "../../assets/images/icons/melakukan pembaya
 import IconMenungguPesanan from "../../assets/images/icons/menunggu pesanan.svg";
 
 // Revisi khusus
+// eslint-disable-next-line no-unused-vars
 import IconCart from "../../assets/images/icons/cart.svg";
 import BerasImage from "../../assets/images/products/beras.svg";
 
@@ -93,9 +94,48 @@ const ReviewItem = ({ name, rating, text }) => (
 /* ---------- Main component ---------- */
 
 const ProductDetailBeforeLogin = () => {
+  const { id } = useParams();
   const [showPopup, setShowPopup] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // Fetch product data from API
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`/api/products/${id}`);
+        if (!response.ok) {
+          throw new Error('Produk tidak ditemukan');
+        }
+        const data = await response.json();
+        setProduct({
+          id: data.id,
+          name: data.name,
+          price: data.price,
+          description: data.description,
+          image: data.image || BerasImage,
+          stock: data.stock || 0,
+          rating: data.rating || 5.0,
+          reviewCount: data.review_count || 0,
+          soldCount: data.sold_count || 0,
+        });
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
 
   // Buka popup akses terkunci
   const handleAction = () => setShowPopup(true);
@@ -109,6 +149,29 @@ const ProductDetailBeforeLogin = () => {
       {/* Spacer agar konten tidak tertutup navbar */}
       <div className="pt-24" />
 
+      {/* Loading state */}
+      {loading && (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500 text-lg">Memuat produk...</p>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && !loading && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="text-red-500 text-lg">{error}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-2 bg-[#3A5B40] text-white rounded-lg hover:bg-[#2c3d33]"
+          >
+            Kembali
+          </button>
+        </div>
+      )}
+
+      {/* Product detail - only show when product is loaded */}
+      {!loading && !error && product && (
+        <>
       {/* ========== DETAIL PRODUK ========== */}
       <section className="w-full mt-0">
         <div className="max-w-[1350px] mx-auto">
@@ -119,8 +182,8 @@ const ProductDetailBeforeLogin = () => {
               {/* Kiri: gambar produk */}
               <div className="flex flex-col items-center">
                 <img
-                  src={BerasImage}
-                  alt="Beras Pulen Berkualitas Cap Dero 5kg"
+                  src={product.image}
+                  alt={product.name}
                   className="w-full max-w-[340px] h-[360px] object-contain rounded-xl border border-[#E0E6D8] bg-white"
                 />
 
@@ -132,7 +195,7 @@ const ProductDetailBeforeLogin = () => {
                       className="w-[90px] h-[90px] bg-white rounded-md flex items-center justify-center border border-[#B8D68F]"
                     >
                       <img
-                        src={BerasImage}
+                        src={product.image}
                         alt={`Thumbnail ${i + 1}`}
                         className="w-[70px] h-[70px] object-contain"
                       />
@@ -144,39 +207,33 @@ const ProductDetailBeforeLogin = () => {
               {/* Kanan: informasi produk */}
               <div className="text-left text-[#3A5B40] md:-ml-4 lg:-ml-16">
                 <h2 className="text-[22px] sm:text-[24px] md:text-[26px] font-extrabold text-[#3A5B40] mb-3">
-                  Beras Pulen Berkualitas Cap Dero 5kg
+                  {product.name}
                 </h2>
 
                 {/* Rating dan info singkat */}
                 <div className="flex flex-wrap items-center gap-3 text-[#3A5B40] text-[14px] font-medium mb-4">
-                  <span>5.0</span>
+                  <span>{product.rating?.toFixed(1) || "5.0"}</span>
                   <span className="text-[16px] leading-none text-[#3A5B40]">
-                    ★★★★★
+                    {"★".repeat(Math.round(product.rating || 5))}{"☆".repeat(5 - Math.round(product.rating || 5))}
                   </span>
                   <span>|</span>
-                  <span>4 Ulasan</span>
+                  <span>{product.reviewCount || 0} Ulasan</span>
                   <span>|</span>
-                  <span>50 Terjual</span>
+                  <span>{product.soldCount || 0} Terjual</span>
                 </div>
 
                 {/* Harga utama */}
                 <div className="inline-block mb-6">
                   <div className="bg-[#3A5B40] rounded-[10px] px-5 py-3">
                     <p className="text-[20px] sm:text-[22px] font-extrabold text-white">
-                      Rp 79.500
+                      Rp {product.price?.toLocaleString("id-ID") || "0"}
                     </p>
                   </div>
                 </div>
 
                 {/* Deskripsi produk */}
                 <p className="text-[#3A5B40] text-[14px] sm:text-[13px] leading-relaxed mb-6 max-w-[515px]">
-                  Beras yang diproses dengan baik sehingga menghasilkan beras
-                  premium yang sangat pulen dan sehat.
-                  <br />
-                  Beras ini sangat bersih dan tidak menggunakan bahan kimia
-                  berbahaya
-                  <br />
-                  sehingga aman digunakan untuk kebutuhan pokok keluarga Anda.
+                  {product.description || "Deskripsi produk tidak tersedia."}
                 </p>
 
                 {/* Info pengiriman, stok, dan qty */}
@@ -192,7 +249,7 @@ const ProductDetailBeforeLogin = () => {
                       <span>5–7 Hari</span>
                     </div>
                     <span>|</span>
-                    <span>Tersisa: 20 barang</span>
+                    <span>Tersisa: {product.stock || 0} barang</span>
                   </div>
 
                   <div className="lg:-ml-0">
@@ -313,6 +370,8 @@ const ProductDetailBeforeLogin = () => {
           </div>
         </div>
       </section>
+      </>
+      )}
 
       <Footer />
 
